@@ -24,7 +24,6 @@ describe('normalize', () => {
   });
 
   it('replaces cyrillic homoglyphs', () => {
-    // Cyrillic а (U+0430) and о (U+043E)
     expect(normalize('vi\u0430d\u043E')).toContain('viado');
   });
 });
@@ -53,6 +52,47 @@ describe('hard-blocked words', () => {
   it('blocks multi-word phrases', () => {
     expect(filterContent('vou te matar agora').allowed).toBe(false);
     expect(filterContent('manda nude pra mim').allowed).toBe(false);
+  });
+});
+
+// ─── New slurs added in v2 ───────────────────────────────────────────────────
+
+describe('hard-blocked — new slurs (v2)', () => {
+  const newSlurs = [
+    'lesbica', 'sapata',
+    'gazela', 'tchola', 'biba', 'mona', 'bixa',
+  ];
+
+  newSlurs.forEach(word => {
+    it(`blocks "${word}"`, () => {
+      const result = filterContent(`mensagem com ${word} aqui`);
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+  });
+});
+
+// ─── New BR actresses added in v2 ───────────────────────────────────────────
+
+describe('hard-blocked — new BR actresses (v2)', () => {
+  const newActresses = [
+    'marcia imperator',
+    'pamela pantera',
+    'martina oliveira',
+    'kinechan',
+    'aline faria',
+    'emme white',
+    'amaya takayo',
+    'geovanna paes',
+    'fabiane thompson',
+  ];
+
+  newActresses.forEach(name => {
+    it(`blocks "${name}"`, () => {
+      const result = filterContent(`quero ver ${name} agora`);
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
   });
 });
 
@@ -94,6 +134,84 @@ describe('BR abbreviation blocking', () => {
   it('blocks bct', () => expect(filterContent('bct').allowed).toBe(false));
   it('blocks vsf', () => expect(filterContent('vsf').allowed).toBe(false));
   it('blocks vtnc', () => expect(filterContent('vtnc').allowed).toBe(false));
+});
+
+// ─── New abbreviation blocking (v2) ─────────────────────────────────────────
+
+describe('BR abbreviation blocking — new (v2)', () => {
+  const newAbbrevs = [
+    'xxt', 'sfd', 'sfda', 'vgb', 'crn', 'fdd', 'bctuda', 'rabt',
+    'fdnd', 'kng', 'tzao', 'ptnh', 'piroq', 'prq', 'pnt',
+    'cuz', 'cz', 'gls', 'chp', 'cnh',
+    'peit', 'peitd', 'raba',
+    'xrc', 'xib', 'pz',
+  ];
+
+  newAbbrevs.forEach(abbrev => {
+    it(`blocks "${abbrev}"`, () => {
+      expect(filterContent(abbrev).allowed).toBe(false);
+    });
+  });
+});
+
+// ─── Abbreviation fixes (v2) ────────────────────────────────────────────────
+
+describe('abbreviation fixes (v2)', () => {
+  it('blocks "pnc" (fixed expansion: pau no cu)', () => {
+    expect(filterContent('pnc').allowed).toBe(false);
+  });
+
+  it('blocks "dlc" (fixed key: was dlç)', () => {
+    expect(filterContent('dlc').allowed).toBe(false);
+  });
+});
+
+// ─── pinto/dp as context-sensitive (v2.1 fix) ───────────────────────────────
+//
+// "pinto" foi REMOVIDO de todas as listas para evitar que o fuzzy matcher
+// (Levenshtein dist 1) confundisse "sinto" com "pinto", bloqueando todas
+// as frases de auto-expressão ("me sinto um lixo", etc).
+//
+// Tradeoff aceito: "seu pinto" não é mais bloqueado pelo context-sensitive.
+// Apenas a abreviação "pnt" permanece em HARD_BLOCKED.
+//
+// "dp" foi movido de HARD_BLOCKED → CONTEXT_SENSITIVE porque 2 letras
+// geram falso positivo em contexto inocente ("o dp do prédio").
+
+describe('pinto/dp as context-sensitive (v2.1)', () => {
+  // pnt abbreviation stays hard-blocked
+  it('blocks "pnt" abbreviation (hard-blocked)', () => {
+    expect(filterContent('pnt').allowed).toBe(false);
+  });
+
+  // pinto — innocent usage allowed (not in any list)
+  it('allows "pinto de ovo"', () => {
+    expect(filterContent('pinto de ovo').allowed).toBe(true);
+  });
+
+  it('allows "eu pinto paredes"', () => {
+    expect(filterContent('eu pinto paredes').allowed).toBe(true);
+  });
+
+  // pinto — NOT blocked even when directed (tradeoff v2.1:
+  // removido de todas as listas para proteger "me sinto")
+  it('allows "seu pinto" (tradeoff v2.1 — not in any list)', () => {
+    expect(filterContent('seu pinto').allowed).toBe(true);
+  });
+
+  it('allows "voce quer ver meu pinto" (tradeoff v2.1 — not in any list)', () => {
+    expect(filterContent('voce quer ver meu pinto').allowed).toBe(true);
+  });
+
+  // dp — innocent usage allowed
+  it('allows "o dp do predio avisou"', () => {
+    expect(filterContent('o dp do predio avisou').allowed).toBe(true);
+  });
+
+  // dp — directed usage blocked
+  it('blocks "voce quer dp" (directed)', () => {
+    expect(filterContent('voce quer dp').allowed).toBe(false);
+  });
 });
 
 // ─── Dot-separated bypass ───────────────────────────────────────────────────
@@ -249,6 +367,28 @@ describe('false positives — must NEVER block', () => {
   });
 });
 
+// ─── False positives — new v2 additions ─────────────────────────────────────
+
+describe('false positives — new v2 additions must not break', () => {
+  const safe = [
+    'vou comprar pneus',
+    'o cromo é bonito',
+    'ela é elegante',
+    'preciso de um pente',
+    'vou ao departamento',
+    'tenho 25 anos',
+    'o dp do predio avisou',
+    'pinto de ovo caipira',
+    'eu pinto a parede amanha',
+  ];
+
+  safe.forEach(phrase => {
+    it(`allows: "${phrase}"`, () => {
+      expect(filterContent(phrase).allowed).toBe(true);
+    });
+  });
+});
+
 // ─── Context-sensitive: self-expression vs directed ──────────────────────────
 
 describe('context-sensitive filtering', () => {
@@ -301,7 +441,6 @@ describe('context-sensitive filtering', () => {
 
   describe('ambiguous context (allowed — benefit of the doubt)', () => {
     it('allows "sou um lixo" without self-expression pattern', () => {
-      // "sou um" IS a self-expression pattern, so this should be allowed
       expect(filterContent('sou um lixo').allowed).toBe(true);
     });
 
@@ -335,7 +474,7 @@ describe('word boundary safety', () => {
   });
 });
 
-// ─── Fuzzy matching (Levenshtein) ────────────────────────────────────────
+// ─── Fuzzy matching (Levenshtein) ────────────────────────────────────────────
 
 describe('fuzzy matching — typo variants', () => {
   it('blocks "viadro" (typo for viado, dist 1)', () => {
@@ -357,36 +496,35 @@ describe('fuzzy matching — typo variants', () => {
   });
 
   it('does NOT fuzzy match short words (< 5 chars)', () => {
-    // "putra" is 5 chars but the target "puta" is 4 chars — threshold for 5-char word is 1
-    // but we only fuzzy match against words with length >= 5 in the wordlist
     expect(filterContent('putra').allowed).toBe(true);
   });
 
   it('does NOT fuzzy match exact matches (dist 0 skipped)', () => {
-    // Exact matches are handled by Layer 1 regex, not fuzzy
     const result = filterContent('estupro');
     expect(result.allowed).toBe(false);
     if (!result.allowed) expect(result.reason).toBe('hard_block');
   });
 
   it('blocks long word typos with dist 2: "arrombadoo" → arrombado', () => {
-    // After normalization collapse, "arrombadoo" → "arrombado" (exact)
-    // Use a different variant: "arrombadk" (8+ chars, dist 1)
     const result = filterContent('arrombadk');
     expect(result.allowed).toBe(false);
     if (!result.allowed) expect(result.reason).toBe('fuzzy_match');
+  });
+
+  it('does NOT fuzzy match "sinto" against "pinto" (v2.1 fix)', () => {
+    // "pinto" foi removido de todas as listas, então fuzzy não tem
+    // alvo para matchear contra "sinto"
+    expect(filterContent('me sinto bem').allowed).toBe(true);
   });
 });
 
 describe('fuzzy match — performance', () => {
   it('fuzzy match adds < 10ms per 2000-char message', () => {
     const longText = 'palavras normais do dia a dia sem nenhum conteudo toxico '.repeat(35);
-    // warm up JIT
     filterContent(longText);
     const start = Date.now();
     for (let i = 0; i < 50; i++) filterContent(longText);
     const elapsed = Date.now() - start;
-    // 50 runs < 500ms = avg < 10ms each (accounts for CI/WSL overhead)
     expect(elapsed).toBeLessThan(500);
   });
 });
@@ -515,6 +653,6 @@ describe('performance', () => {
     const start = Date.now();
     for (let i = 0; i < 100; i++) filterContent(longText);
     const elapsed = Date.now() - start;
-    expect(elapsed).toBeLessThan(1000); // 100 runs < 1s = avg < 10ms each
+    expect(elapsed).toBeLessThan(1000);
   });
 });
