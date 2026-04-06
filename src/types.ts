@@ -1,4 +1,4 @@
-export type FilterReason = 'hard_block' | 'directed_insult' | 'link' | 'phone' | 'digits_only';
+export type FilterReason = 'hard_block' | 'directed_insult' | 'fuzzy_match' | 'link' | 'phone' | 'digits_only';
 
 export type FilterResult =
   | { allowed: true }

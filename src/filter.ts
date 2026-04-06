@@ -65,6 +65,40 @@ export function normalize(input: string): string {
   return t;
 }
 
+// ─── Levenshtein distance ───────────────────────────────────────────────────
+
+function levenshtein(a: string, b: string, maxDist: number): number {
+  const la = a.length;
+  const lb = b.length;
+  if (Math.abs(la - lb) > maxDist) return maxDist + 1;
+
+  // Single-row DP with early termination
+  let prev = new Array(lb + 1);
+  for (let j = 0; j <= lb; j++) prev[j] = j;
+
+  for (let i = 1; i <= la; i++) {
+    const curr = new Array(lb + 1);
+    curr[0] = i;
+    let rowMin = i;
+    for (let j = 1; j <= lb; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      curr[j] = Math.min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost);
+      if (curr[j] < rowMin) rowMin = curr[j];
+    }
+    // If the minimum value in this row already exceeds maxDist, bail early
+    if (rowMin > maxDist) return maxDist + 1;
+    prev = curr;
+  }
+
+  return prev[lb];
+}
+
+function getFuzzyThreshold(wordLength: number): number {
+  if (wordLength <= 4) return 0; // disabled for short words
+  if (wordLength <= 7) return 1;
+  return 2;
+}
+
 // ─── Escape regex special chars ──────────────────────────────────────────────
 
 function escapeRegex(str: string): string {
@@ -103,6 +137,18 @@ export function createFilter(options: ToxiBROptions = {}) {
   const hardBlockedRegexes = buildRegexes(allBlocked);
   const contextSensitiveRegexes = buildRegexes(allContext);
 
+  // Pre-normalized wordlist for fuzzy matching, bucketed by length (deduplicated)
+  const fuzzyByLength = new Map<number, string[]>();
+  const seenFuzzy = new Set<string>();
+  for (const w of allBlocked) {
+    const n = normalize(w);
+    if (n.includes(' ') || n.length < 5 || seenFuzzy.has(n)) continue;
+    seenFuzzy.add(n);
+    const len = n.length;
+    if (!fuzzyByLength.has(len)) fuzzyByLength.set(len, []);
+    fuzzyByLength.get(len)!.push(n);
+  }
+
   return function filterContent(text: string): FilterResult {
     const normalized = normalize(text);
 
@@ -131,6 +177,26 @@ export function createFilter(options: ToxiBROptions = {}) {
     for (const { word, regex } of hardBlockedRegexes) {
       if (regex.test(normalized)) {
         return { allowed: false, reason: 'hard_block', matched: word };
+      }
+    }
+
+    // Layer 1b: Fuzzy match (Levenshtein) — fallback for typo variants
+    {
+      const messageWords = new Set(normalized.split(/\s+/));
+      for (const msgWord of messageWords) {
+        const threshold = getFuzzyThreshold(msgWord.length);
+        if (threshold === 0) continue;
+        // Only check blocked words whose length is within threshold range
+        for (let len = msgWord.length - threshold; len <= msgWord.length + threshold; len++) {
+          const candidates = fuzzyByLength.get(len);
+          if (!candidates) continue;
+          for (const blocked of candidates) {
+            const dist = levenshtein(msgWord, blocked, threshold);
+            if (dist > 0 && dist <= threshold) {
+              return { allowed: false, reason: 'fuzzy_match', matched: blocked };
+            }
+          }
+        }
       }
     }
 

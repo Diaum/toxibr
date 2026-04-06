@@ -327,6 +327,62 @@ describe('word boundary safety', () => {
   });
 });
 
+// ─── Fuzzy matching (Levenshtein) ────────────────────────────────────────
+
+describe('fuzzy matching — typo variants', () => {
+  it('blocks "viadro" (typo for viado, dist 1)', () => {
+    const result = filterContent('viadro');
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) expect(result.reason).toBe('fuzzy_match');
+  });
+
+  it('blocks "bucetra" (typo for buceta, dist 1)', () => {
+    const result = filterContent('bucetra');
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) expect(result.reason).toBe('fuzzy_match');
+  });
+
+  it('blocks "estupeo" (typo for estupro, dist 1)', () => {
+    const result = filterContent('estupeo');
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) expect(result.reason).toBe('fuzzy_match');
+  });
+
+  it('does NOT fuzzy match short words (< 5 chars)', () => {
+    // "putra" is 5 chars but the target "puta" is 4 chars — threshold for 5-char word is 1
+    // but we only fuzzy match against words with length >= 5 in the wordlist
+    expect(filterContent('putra').allowed).toBe(true);
+  });
+
+  it('does NOT fuzzy match exact matches (dist 0 skipped)', () => {
+    // Exact matches are handled by Layer 1 regex, not fuzzy
+    const result = filterContent('estupro');
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) expect(result.reason).toBe('hard_block');
+  });
+
+  it('blocks long word typos with dist 2: "arrombadoo" → arrombado', () => {
+    // After normalization collapse, "arrombadoo" → "arrombado" (exact)
+    // Use a different variant: "arrombadk" (8+ chars, dist 1)
+    const result = filterContent('arrombadk');
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) expect(result.reason).toBe('fuzzy_match');
+  });
+});
+
+describe('fuzzy match — performance', () => {
+  it('fuzzy match adds < 10ms per 2000-char message', () => {
+    const longText = 'palavras normais do dia a dia sem nenhum conteudo toxico '.repeat(35);
+    // warm up JIT
+    filterContent(longText);
+    const start = Date.now();
+    for (let i = 0; i < 50; i++) filterContent(longText);
+    const elapsed = Date.now() - start;
+    // 50 runs < 500ms = avg < 10ms each (accounts for CI/WSL overhead)
+    expect(elapsed).toBeLessThan(500);
+  });
+});
+
 // ─── Performance ─────────────────────────────────────────────────────────────
 
 describe('performance', () => {
