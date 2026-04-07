@@ -192,9 +192,15 @@ export function createFilter(options: ToxiBROptions = {}) {
       return { allowed: false, reason: 'hard_block', matched: 'censorship bypass' };
     }
 
-    // Layer 0z: Pre-normalization exact matches (terms that break after leetspeak)
+    // Layer 0z: Pre-normalization exact matches (terms that break after leetspeak/normalization)
     if (/\bd4\b/i.test(text)) {
       return { allowed: false, reason: 'hard_block', matched: 'd4' };
+    }
+    if (/\d+\s*cm\b/i.test(text)) {
+      return { allowed: false, reason: 'hard_block', matched: 'medida cm' };
+    }
+    if (/\b-18\b/.test(text)) {
+      return { allowed: false, reason: 'hard_block', matched: '-18' };
     }
 
     // Layer 0a: Block links/URLs
