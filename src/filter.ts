@@ -14,12 +14,80 @@ import {
 } from './wordlists';
 import type { FilterResult, CensorResult, ToxiBROptions, FilterReason, Severity } from './types';
 
-// ─── Homoglyph map (Cyrillic → Latin) ────────────────────────────────────────
+// ─── Homoglyph map (Cyrillic + Latin Extended → ASCII) ───────────────────────
 
 const HOMOGLYPHS: Record<string, string> = {
+  // Cyrillic → Latin
   '\u0430': 'a', '\u0435': 'e', '\u043E': 'o', '\u0440': 'p',
   '\u0441': 'c', '\u0443': 'y', '\u0456': 'i', '\u0445': 'x',
   '\u043D': 'h', '\u0442': 't', '\u043C': 'm', '\u043A': 'k',
+
+  // Latin Extended — non-decomposable letter forms used in bypass attempts
+  // Latin Extended-A (U+0100–U+017F)
+  '\u0110': 'd', '\u0111': 'd', // Đ đ (D with stroke)
+  '\u0126': 'h', '\u0127': 'h', // Ħ ħ (H with stroke)
+  '\u0131': 'i',                 // ı (dotless i)
+  '\u0138': 'k',                 // ĸ (kra)
+  '\u0141': 'l', '\u0142': 'l', // Ł ł (L with stroke)
+  '\u014A': 'n', '\u014B': 'n', // Ŋ ŋ (eng)
+  '\u0152': 'oe', '\u0153': 'oe', // Œ œ (ligature)
+  '\u0166': 't', '\u0167': 't', // Ŧ ŧ (T with stroke)
+
+  // Latin Extended-B (U+0180–U+024F)
+  '\u0180': 'b',                 // ƀ (b with stroke)
+  '\u0183': 'b', '\u0182': 'b', // ƃ Ƃ (b with topbar)
+  '\u0188': 'c', '\u0187': 'c', // ƈ Ƈ (c with hook)
+  '\u0189': 'd', '\u018A': 'd', // Ɖ Ɗ (African D)
+  '\u0191': 'f', '\u0192': 'f', // Ƒ ƒ (f with hook)
+  '\u0193': 'g',                 // Ɠ (G with hook)
+  '\u0197': 'i',                 // Ɨ (I with stroke)
+  '\u0198': 'k', '\u0199': 'k', // Ƙ ƙ (k with hook)
+  '\u019A': 'l',                 // ƚ (l with bar)
+  '\u019D': 'n',                 // Ɲ (N with left hook)
+  '\u019E': 'n',                 // ƞ (n with long right leg)
+  '\u01A4': 'p', '\u01A5': 'p', // Ƥ ƥ (p with hook)
+  '\u01AB': 't',                 // ƫ (t with palatal hook)
+  '\u01AD': 't', '\u01AC': 't', // ƭ Ƭ (t with hook)
+  '\u01B2': 'v',                 // Ʋ (V with hook)
+  '\u01B3': 'y', '\u01B4': 'y', // Ƴ ƴ (y with hook)
+  '\u01B5': 'z', '\u01B6': 'z', // Ƶ ƶ (z with stroke)
+  '\u01C2': '!',                 // ǂ (alveolar click — used as ! substitute)
+  '\u0221': 'd',                 // ȡ (d with curl)
+  '\u0225': 'z',                 // ȥ (z with hook)
+  '\u0234': 'l',                 // ȴ (l with curl)
+  '\u0235': 'n',                 // ȵ (n with curl)
+  '\u0236': 't',                 // ȶ (t with curl)
+
+  // IPA / Latin Extended-B letter forms commonly abused
+  '\u0251': 'a',                 // ɑ (Latin alpha)
+  '\u0252': 'a',                 // ɒ (turned alpha)
+  '\u0253': 'b',                 // ɓ (b with hook)
+  '\u0254': 'o',                 // ɔ (open o)
+  '\u0256': 'd', '\u0257': 'd', // ɖ ɗ (d with tail/hook)
+  '\u025B': 'e',                 // ɛ (open e)
+  '\u0261': 'g',                 // ɡ (script g)
+  '\u0262': 'g',                 // ɢ (small capital G)
+  '\u0265': 'h',                 // ɥ (turned h)
+  '\u0268': 'i',                 // ɨ (i with stroke)
+  '\u026A': 'i',                 // ɪ (small capital I)
+  '\u026B': 'l', '\u026C': 'l', '\u026D': 'l', // ɫ ɬ ɭ
+  '\u0271': 'm',                 // ɱ (m with hook)
+  '\u0272': 'n', '\u0273': 'n', // ɲ ɳ (n variants)
+  '\u0275': 'o',                 // ɵ (barred o)
+  '\u027C': 'r', '\u027D': 'r', '\u027E': 'r', // ɼ ɽ ɾ
+  '\u0280': 'r',                 // ʀ (small capital R)
+  '\u0282': 's',                 // ʂ (s with hook)
+  '\u0284': 'j',                 // ʄ (dotless j with stroke and hook)
+  '\u0287': 't',                 // ʇ (turned t)
+  '\u0288': 't',                 // ʈ (t with retroflex hook)
+  '\u028B': 'v',                 // ʋ (v with hook)
+  '\u028F': 'y',                 // ʏ (small capital Y)
+  '\u0290': 'z', '\u0291': 'z', // ʐ ʑ (z variants)
+  '\u0299': 'b',                 // ʙ (small capital B)
+  '\u029B': 'g',                 // ʛ (small capital G with hook)
+  '\u029C': 'h',                 // ʜ (small capital H)
+  '\u029F': 'l',                 // ʟ (small capital L)
+  '\u02A0': 'q',                 // ʠ (q with hook)
 };
 
 // ─── Leetspeak map ───────────────────────────────────────────────────────────

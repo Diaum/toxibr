@@ -26,6 +26,35 @@ describe('normalize', () => {
   it('replaces cyrillic homoglyphs', () => {
     expect(normalize('vi\u0430d\u043E')).toContain('viado');
   });
+
+  it('replaces Latin Extended-A homoglyphs', () => {
+    // ł → l, đ → d, ı → i
+    expect(normalize('\u0142ixo')).toContain('lixo');
+    expect(normalize('\u0111oente')).toContain('doente');
+    expect(normalize('v\u0131ado')).toContain('viado');
+  });
+
+  it('replaces Latin Extended-B homoglyphs', () => {
+    // ƒ → f, ƶ → z, ƙ → k
+    expect(normalize('\u0192oda')).toContain('foda');
+    expect(normalize('\u01B6oneira')).toContain('zoneira');
+    expect(normalize('\u0199aralho')).toContain('karalho');
+  });
+
+  it('replaces IPA / Latin Extended letter forms used in bypass', () => {
+    // ɑ → a, ɡ → g, ɵ → o, ɛ → e
+    expect(normalize('vi\u0251do')).toContain('viado');
+    expect(normalize('\u0261ato')).toContain('gato');
+    expect(normalize('b\u0275ba')).toContain('boba');
+    expect(normalize('m\u025Brda')).toContain('merda');
+  });
+
+  it('blocks bypass with Latin Extended homoglyphs', () => {
+    // End-to-end: dotless i + Latin alpha should still be caught
+    expect(filterContent('v\u0131\u0251do').allowed).toBe(false);
+    // Script g + barred o
+    expect(filterContent('ɡɵzar').allowed).toBe(false);
+  });
 });
 
 // ─── Hard-blocked words ──────────────────────────────────────────────────────
