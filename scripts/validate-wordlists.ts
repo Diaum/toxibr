@@ -21,10 +21,12 @@ function findDuplicates(name: string, words: string[]): void {
 }
 
 function findCrossListDuplicates(
-  nameA: string, listA: string[],
-  nameB: string, listB: string[],
+  nameA: string,
+  listA: string[],
+  nameB: string,
+  listB: string[]
 ): void {
-  const setA = new Set(listA.map(w => w.toLowerCase().trim()));
+  const setA = new Set(listA.map((w) => w.toLowerCase().trim()));
   for (const word of listB) {
     const normalized = word.toLowerCase().trim();
     if (setA.has(normalized)) {
@@ -38,13 +40,15 @@ function validateAbbreviations(): void {
   const abbrevKeys = Object.keys(ABBREVIATION_MAP);
 
   // Check if abbreviation expands to something in HARD_BLOCKED or CONTEXT_SENSITIVE
-  const hardSet = new Set(HARD_BLOCKED.map(w => w.toLowerCase().trim()));
-  const contextSet = new Set(CONTEXT_SENSITIVE.map(w => w.toLowerCase().trim()));
+  const hardSet = new Set(HARD_BLOCKED.map((w) => w.toLowerCase().trim()));
+  const contextSet = new Set(CONTEXT_SENSITIVE.map((w) => w.toLowerCase().trim()));
   for (const [abbr, expansion] of Object.entries(ABBREVIATION_MAP)) {
     const inHard = hardSet.has(abbr) || hardSet.has(expansion);
     const inContext = contextSet.has(abbr) || contextSet.has(expansion);
     if (!inHard && !inContext) {
-      console.warn(`  ⚠ Abreviação "${abbr}" → "${expansion}": não está em HARD_BLOCKED nem CONTEXT_SENSITIVE`);
+      console.warn(
+        `  ⚠ Abreviação "${abbr}" → "${expansion}": não está em HARD_BLOCKED nem CONTEXT_SENSITIVE`
+      );
     }
   }
 

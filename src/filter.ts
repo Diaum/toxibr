@@ -18,83 +18,120 @@ import type { FilterResult, CensorResult, ToxiBROptions, FilterReason, Severity 
 
 const HOMOGLYPHS: Record<string, string> = {
   // Cyrillic → Latin
-  '\u0430': 'a', '\u0435': 'e', '\u043E': 'o', '\u0440': 'p',
-  '\u0441': 'c', '\u0443': 'y', '\u0456': 'i', '\u0445': 'x',
-  '\u043D': 'h', '\u0442': 't', '\u043C': 'm', '\u043A': 'k',
+  '\u0430': 'a',
+  '\u0435': 'e',
+  '\u043E': 'o',
+  '\u0440': 'p',
+  '\u0441': 'c',
+  '\u0443': 'y',
+  '\u0456': 'i',
+  '\u0445': 'x',
+  '\u043D': 'h',
+  '\u0442': 't',
+  '\u043C': 'm',
+  '\u043A': 'k',
 
   // Latin Extended — non-decomposable letter forms used in bypass attempts
   // Latin Extended-A (U+0100–U+017F)
-  '\u0110': 'd', '\u0111': 'd', // Đ đ (D with stroke)
-  '\u0126': 'h', '\u0127': 'h', // Ħ ħ (H with stroke)
-  '\u0131': 'i',                 // ı (dotless i)
-  '\u0138': 'k',                 // ĸ (kra)
-  '\u0141': 'l', '\u0142': 'l', // Ł ł (L with stroke)
-  '\u014A': 'n', '\u014B': 'n', // Ŋ ŋ (eng)
-  '\u0152': 'oe', '\u0153': 'oe', // Œ œ (ligature)
-  '\u0166': 't', '\u0167': 't', // Ŧ ŧ (T with stroke)
+  '\u0110': 'd',
+  '\u0111': 'd', // Đ đ (D with stroke)
+  '\u0126': 'h',
+  '\u0127': 'h', // Ħ ħ (H with stroke)
+  '\u0131': 'i', // ı (dotless i)
+  '\u0138': 'k', // ĸ (kra)
+  '\u0141': 'l',
+  '\u0142': 'l', // Ł ł (L with stroke)
+  '\u014A': 'n',
+  '\u014B': 'n', // Ŋ ŋ (eng)
+  '\u0152': 'oe',
+  '\u0153': 'oe', // Œ œ (ligature)
+  '\u0166': 't',
+  '\u0167': 't', // Ŧ ŧ (T with stroke)
 
   // Latin Extended-B (U+0180–U+024F)
-  '\u0180': 'b',                 // ƀ (b with stroke)
-  '\u0183': 'b', '\u0182': 'b', // ƃ Ƃ (b with topbar)
-  '\u0188': 'c', '\u0187': 'c', // ƈ Ƈ (c with hook)
-  '\u0189': 'd', '\u018A': 'd', // Ɖ Ɗ (African D)
-  '\u0191': 'f', '\u0192': 'f', // Ƒ ƒ (f with hook)
-  '\u0193': 'g',                 // Ɠ (G with hook)
-  '\u0197': 'i',                 // Ɨ (I with stroke)
-  '\u0198': 'k', '\u0199': 'k', // Ƙ ƙ (k with hook)
-  '\u019A': 'l',                 // ƚ (l with bar)
-  '\u019D': 'n',                 // Ɲ (N with left hook)
-  '\u019E': 'n',                 // ƞ (n with long right leg)
-  '\u01A4': 'p', '\u01A5': 'p', // Ƥ ƥ (p with hook)
-  '\u01AB': 't',                 // ƫ (t with palatal hook)
-  '\u01AD': 't', '\u01AC': 't', // ƭ Ƭ (t with hook)
-  '\u01B2': 'v',                 // Ʋ (V with hook)
-  '\u01B3': 'y', '\u01B4': 'y', // Ƴ ƴ (y with hook)
-  '\u01B5': 'z', '\u01B6': 'z', // Ƶ ƶ (z with stroke)
-  '\u01C2': '!',                 // ǂ (alveolar click — used as ! substitute)
-  '\u0221': 'd',                 // ȡ (d with curl)
-  '\u0225': 'z',                 // ȥ (z with hook)
-  '\u0234': 'l',                 // ȴ (l with curl)
-  '\u0235': 'n',                 // ȵ (n with curl)
-  '\u0236': 't',                 // ȶ (t with curl)
+  '\u0180': 'b', // ƀ (b with stroke)
+  '\u0183': 'b',
+  '\u0182': 'b', // ƃ Ƃ (b with topbar)
+  '\u0188': 'c',
+  '\u0187': 'c', // ƈ Ƈ (c with hook)
+  '\u0189': 'd',
+  '\u018A': 'd', // Ɖ Ɗ (African D)
+  '\u0191': 'f',
+  '\u0192': 'f', // Ƒ ƒ (f with hook)
+  '\u0193': 'g', // Ɠ (G with hook)
+  '\u0197': 'i', // Ɨ (I with stroke)
+  '\u0198': 'k',
+  '\u0199': 'k', // Ƙ ƙ (k with hook)
+  '\u019A': 'l', // ƚ (l with bar)
+  '\u019D': 'n', // Ɲ (N with left hook)
+  '\u019E': 'n', // ƞ (n with long right leg)
+  '\u01A4': 'p',
+  '\u01A5': 'p', // Ƥ ƥ (p with hook)
+  '\u01AB': 't', // ƫ (t with palatal hook)
+  '\u01AD': 't',
+  '\u01AC': 't', // ƭ Ƭ (t with hook)
+  '\u01B2': 'v', // Ʋ (V with hook)
+  '\u01B3': 'y',
+  '\u01B4': 'y', // Ƴ ƴ (y with hook)
+  '\u01B5': 'z',
+  '\u01B6': 'z', // Ƶ ƶ (z with stroke)
+  '\u01C2': '!', // ǂ (alveolar click — used as ! substitute)
+  '\u0221': 'd', // ȡ (d with curl)
+  '\u0225': 'z', // ȥ (z with hook)
+  '\u0234': 'l', // ȴ (l with curl)
+  '\u0235': 'n', // ȵ (n with curl)
+  '\u0236': 't', // ȶ (t with curl)
 
   // IPA / Latin Extended-B letter forms commonly abused
-  '\u0251': 'a',                 // ɑ (Latin alpha)
-  '\u0252': 'a',                 // ɒ (turned alpha)
-  '\u0253': 'b',                 // ɓ (b with hook)
-  '\u0254': 'o',                 // ɔ (open o)
-  '\u0256': 'd', '\u0257': 'd', // ɖ ɗ (d with tail/hook)
-  '\u025B': 'e',                 // ɛ (open e)
-  '\u0261': 'g',                 // ɡ (script g)
-  '\u0262': 'g',                 // ɢ (small capital G)
-  '\u0265': 'h',                 // ɥ (turned h)
-  '\u0268': 'i',                 // ɨ (i with stroke)
-  '\u026A': 'i',                 // ɪ (small capital I)
-  '\u026B': 'l', '\u026C': 'l', '\u026D': 'l', // ɫ ɬ ɭ
-  '\u0271': 'm',                 // ɱ (m with hook)
-  '\u0272': 'n', '\u0273': 'n', // ɲ ɳ (n variants)
-  '\u0275': 'o',                 // ɵ (barred o)
-  '\u027C': 'r', '\u027D': 'r', '\u027E': 'r', // ɼ ɽ ɾ
-  '\u0280': 'r',                 // ʀ (small capital R)
-  '\u0282': 's',                 // ʂ (s with hook)
-  '\u0284': 'j',                 // ʄ (dotless j with stroke and hook)
-  '\u0287': 't',                 // ʇ (turned t)
-  '\u0288': 't',                 // ʈ (t with retroflex hook)
-  '\u028B': 'v',                 // ʋ (v with hook)
-  '\u028F': 'y',                 // ʏ (small capital Y)
-  '\u0290': 'z', '\u0291': 'z', // ʐ ʑ (z variants)
-  '\u0299': 'b',                 // ʙ (small capital B)
-  '\u029B': 'g',                 // ʛ (small capital G with hook)
-  '\u029C': 'h',                 // ʜ (small capital H)
-  '\u029F': 'l',                 // ʟ (small capital L)
-  '\u02A0': 'q',                 // ʠ (q with hook)
+  '\u0251': 'a', // ɑ (Latin alpha)
+  '\u0252': 'a', // ɒ (turned alpha)
+  '\u0253': 'b', // ɓ (b with hook)
+  '\u0254': 'o', // ɔ (open o)
+  '\u0256': 'd',
+  '\u0257': 'd', // ɖ ɗ (d with tail/hook)
+  '\u025B': 'e', // ɛ (open e)
+  '\u0261': 'g', // ɡ (script g)
+  '\u0262': 'g', // ɢ (small capital G)
+  '\u0265': 'h', // ɥ (turned h)
+  '\u0268': 'i', // ɨ (i with stroke)
+  '\u026A': 'i', // ɪ (small capital I)
+  '\u026B': 'l',
+  '\u026C': 'l',
+  '\u026D': 'l', // ɫ ɬ ɭ
+  '\u0271': 'm', // ɱ (m with hook)
+  '\u0272': 'n',
+  '\u0273': 'n', // ɲ ɳ (n variants)
+  '\u0275': 'o', // ɵ (barred o)
+  '\u027C': 'r',
+  '\u027D': 'r',
+  '\u027E': 'r', // ɼ ɽ ɾ
+  '\u0280': 'r', // ʀ (small capital R)
+  '\u0282': 's', // ʂ (s with hook)
+  '\u0284': 'j', // ʄ (dotless j with stroke and hook)
+  '\u0287': 't', // ʇ (turned t)
+  '\u0288': 't', // ʈ (t with retroflex hook)
+  '\u028B': 'v', // ʋ (v with hook)
+  '\u028F': 'y', // ʏ (small capital Y)
+  '\u0290': 'z',
+  '\u0291': 'z', // ʐ ʑ (z variants)
+  '\u0299': 'b', // ʙ (small capital B)
+  '\u029B': 'g', // ʛ (small capital G with hook)
+  '\u029C': 'h', // ʜ (small capital H)
+  '\u029F': 'l', // ʟ (small capital L)
+  '\u02A0': 'q', // ʠ (q with hook)
 };
 
 // ─── Leetspeak map ───────────────────────────────────────────────────────────
 
 const LEET: Record<string, string> = {
-  '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's',
-  '7': 't', '@': 'a', '$': 's',
+  '0': 'o',
+  '1': 'i',
+  '3': 'e',
+  '4': 'a',
+  '5': 's',
+  '7': 't',
+  '@': 'a',
+  $: 's',
 };
 
 // ─── Normalize text for comparison ───────────────────────────────────────────
@@ -109,7 +146,7 @@ export function normalize(input: string): string {
   t = t.normalize('NFC');
 
   // 3. Replace homoglyphs
-  t = [...t].map(c => HOMOGLYPHS[c] ?? c).join('');
+  t = [...t].map((c) => HOMOGLYPHS[c] ?? c).join('');
 
   // 4. Lowercase
   t = t.toLowerCase();
@@ -121,7 +158,7 @@ export function normalize(input: string): string {
   t = t.replace(/(.)\1+/g, '$1');
 
   // 7. Leetspeak
-  t = [...t].map(c => LEET[c] ?? c).join('');
+  t = [...t].map((c) => LEET[c] ?? c).join('');
 
   // 8. Remove censoring characters (* #) between letters
   t = t.replace(/[*#]+/g, '');
@@ -135,10 +172,12 @@ export function normalize(input: string): string {
 
   // 10. Expand known abbreviations (strip punctuation from each word before lookup)
   const words = t.split(/\s+/);
-  t = words.map(w => {
-    const clean = w.replace(/[^a-z0-9çã]/g, '');
-    return ABBREVIATION_MAP[clean] ?? w;
-  }).join(' ');
+  t = words
+    .map((w) => {
+      const clean = w.replace(/[^a-z0-9çã]/g, '');
+      return ABBREVIATION_MAP[clean] ?? w;
+    })
+    .join(' ');
 
   // 11. Re-clean after abbreviation expansion (expansions may contain dashes/spaces)
   t = t.replace(/[.\-]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -182,18 +221,37 @@ function getFuzzyThreshold(wordLength: number): number {
 
 // Common innocent words that fuzzy matching incorrectly flags
 const FUZZY_ALLOWLIST = new Set([
-  'parada', 'parado', 'paradas', 'parados',
-  'batedor', 'batedores',
-  'punho', 'punhal', 'punhado',
-  'tocada', 'tocado',
-  'primeira', 'primeiro', 'primeiras', 'primeiros',
-  'merda', 'bosta', 'porra',
-  'plsos',  // typo de pulsos
-  'chorando', 'chorado',  // fuzzy matches chupando
-  'conteudo', 'cotneudo', // fuzzy matches cornudo
-  'estourar', 'estourou', 'estouro', // fuzzy matches estuprar
-  'jogou', 'jogos', 'jogo', // fuzzy matches jorrou
-  'mamae', 'mamada',  // mamae gets fuzzy-matched to mamada incorrectly
+  'parada',
+  'parado',
+  'paradas',
+  'parados',
+  'batedor',
+  'batedores',
+  'punho',
+  'punhal',
+  'punhado',
+  'tocada',
+  'tocado',
+  'primeira',
+  'primeiro',
+  'primeiras',
+  'primeiros',
+  'merda',
+  'bosta',
+  'porra',
+  'plsos', // typo de pulsos
+  'chorando',
+  'chorado', // fuzzy matches chupando
+  'conteudo',
+  'cotneudo', // fuzzy matches cornudo
+  'estourar',
+  'estourou',
+  'estouro', // fuzzy matches estuprar
+  'jogou',
+  'jogos',
+  'jogo', // fuzzy matches jorrou
+  'mamae',
+  'mamada', // mamae gets fuzzy-matched to mamada incorrectly
 ]);
 
 // ─── Escape regex special chars ──────────────────────────────────────────────
@@ -205,7 +263,7 @@ function escapeRegex(str: string): string {
 // ─── Build regex list from words ─────────────────────────────────────────────
 
 function buildRegexes(words: string[]): { word: string; regex: RegExp }[] {
-  return words.map(word => {
+  return words.map((word) => {
     const n = normalize(word);
     const pattern = n.includes(' ') ? escapeRegex(n) : `\\b${escapeRegex(n)}\\b`;
     return { word, regex: new RegExp(pattern) };
@@ -217,7 +275,8 @@ function buildRegexes(words: string[]): { word: string; regex: RegExp }[] {
 const PHONE_REGEX = /(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?\d{4,5}[\s.-]?\d{4}/;
 const PHONE_REGEX_G = /(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?\d{4,5}[\s.-]?\d{4}/g;
 const LINK_REGEX = /https?:\/\/|www\.|\.com|\.net|\.org|\.br|\.io|\.me|\.tv|\.co|\.link|\.xyz/i;
-const LINK_REPLACE_REGEX = /(?:https?:\/\/\S+|www\.\S+|\S+\.(?:com|net|org|br|io|me|tv|co|link|xyz)\S*)/gi;
+const LINK_REPLACE_REGEX =
+  /(?:https?:\/\/\S+|www\.\S+|\S+\.(?:com|net|org|br|io|me|tv|co|link|xyz)\S*)/gi;
 
 // ─── Create filter instance ──────────────────────────────────────────────────
 
@@ -325,7 +384,7 @@ export function createFilter(options: ToxiBROptions = {}) {
       // Context-sensitive emojis (only block when directed at someone)
       for (const emoji of CONTEXT_SENSITIVE_EMOJIS) {
         if (!emojiText.includes(emoji)) continue;
-        if (DIRECTED_PATTERNS.some(p => p.test(normalized))) {
+        if (DIRECTED_PATTERNS.some((p) => p.test(normalized))) {
           return makeResult('offensive_emoji', emoji);
         }
       }
@@ -407,10 +466,10 @@ export function createFilter(options: ToxiBROptions = {}) {
           const ws = Math.max(0, pos - radius);
           const we = Math.min(normalizedWords.length, pos + radius + 1);
           const w = normalizedWords.slice(ws, we).join(' ');
-          if (closestDirected === Infinity && DIRECTED_PATTERNS.some(p => p.test(w))) {
+          if (closestDirected === Infinity && DIRECTED_PATTERNS.some((p) => p.test(w))) {
             closestDirected = radius;
           }
-          if (closestSelfExpr === Infinity && SELF_EXPRESSION_PATTERNS.some(p => p.test(w))) {
+          if (closestSelfExpr === Infinity && SELF_EXPRESSION_PATTERNS.some((p) => p.test(w))) {
             closestSelfExpr = radius;
           }
           if (closestDirected < Infinity && closestSelfExpr < Infinity) break;
@@ -434,7 +493,7 @@ export function createFilter(options: ToxiBROptions = {}) {
 
       for (let i = 0; i <= words.length - windowSize; i++) {
         const window = words.slice(i, i + windowSize);
-        const seedMatches = window.filter(w => seedSet.has(w));
+        const seedMatches = window.filter((w) => seedSet.has(w));
         if (seedMatches.length >= 3) {
           return makeResult('suspicious_content', seedMatches.join(', '));
         }
@@ -442,7 +501,7 @@ export function createFilter(options: ToxiBROptions = {}) {
 
       // Also check shorter messages (< windowSize words)
       if (words.length < windowSize && words.length >= 3) {
-        const seedMatches = words.filter(w => seedSet.has(w));
+        const seedMatches = words.filter((w) => seedSet.has(w));
         if (seedMatches.length >= 3) {
           return makeResult('suspicious_content', seedMatches.join(', '));
         }
@@ -501,13 +560,15 @@ export function createCensor(options: ToxiBROptions = {}) {
     const phraseBlocked = new Set<number>();
 
     const nonSpaceIndices: number[] = [];
-    words.forEach((w, i) => { if (w.trim()) nonSpaceIndices.push(i); });
+    words.forEach((w, i) => {
+      if (w.trim()) nonSpaceIndices.push(i);
+    });
 
     for (let n = 2; n <= 4; n++) {
       for (let si = 0; si <= nonSpaceIndices.length - n; si++) {
         const indices = nonSpaceIndices.slice(si, si + n);
-        if (indices.some(idx => phraseBlocked.has(idx))) continue;
-        const phrase = indices.map(idx => words[idx]).join(' ');
+        if (indices.some((idx) => phraseBlocked.has(idx))) continue;
+        const phrase = indices.map((idx) => words[idx]).join(' ');
         const res = filter(phrase);
         if (!res.allowed && res.matched && res.matched.split(/\s+/).length >= 2) {
           for (const idx of indices) {

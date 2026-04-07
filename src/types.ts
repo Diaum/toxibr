@@ -1,4 +1,12 @@
-export type FilterReason = 'hard_block' | 'directed_insult' | 'fuzzy_match' | 'suspicious_content' | 'link' | 'phone' | 'digits_only' | 'offensive_emoji';
+export type FilterReason =
+  | 'hard_block'
+  | 'directed_insult'
+  | 'fuzzy_match'
+  | 'suspicious_content'
+  | 'link'
+  | 'phone'
+  | 'digits_only'
+  | 'offensive_emoji';
 
 export type Severity = 'block' | 'warn' | 'flag';
 
