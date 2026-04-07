@@ -115,7 +115,7 @@ const FUZZY_ALLOWLIST = new Set([
   'punho', 'punhal', 'punhado',
   'tocada', 'tocado',
   'primeira', 'primeiro', 'primeiras', 'primeiros',
-  'merda', 'bosta',
+  'merda', 'bosta', 'porra',
   'plsos',  // typo de pulsos
   'chorando', 'chorado',  // fuzzy matches chupando
   'mamae', 'mamada',  // mamae gets fuzzy-matched to mamada incorrectly

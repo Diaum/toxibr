@@ -68,9 +68,9 @@ export const HARD_BLOCKED: string[] = [
   'sapatao', 'sapatona',
   'traveco', 'travecos', 'travecas',
   'baitola', 'boiola', 'bichona',
-  'putinha', 'putona', 'putaria', 'puta', 'putas',
+  'putinha', 'putona', 'puta', 'putas',
   'vagabunda', 'vagabundo',
-  'arrombado', 'arrombada', 'arrombadas',
+  'arrombado', 'arrombada', 'arrombadas', 'arrombadinho', 'arrombadinha',
   'cuzao', 'cuzona',
   'lesbica', 'sapata',
   'gazela', 'tchola', 'biba', 'mona', 'bixa',
@@ -99,7 +99,8 @@ export const HARD_BLOCKED: string[] = [
   'brasileirinhas',
 
   // ── Conteudo sexual explicito ──
-  'punheteiro', 'punheteira', 'punheta', 'punhetao', 'punhetinha',
+  'punheteiro', 'punheteira', 'punheteirinho', 'punheteirinha',
+  'punheta', 'punhetao', 'punhetinha',
   'batendo uma', 'bora bater uma', 'bater uma', 'gozando',
   'anal', 'mamada', 'leitada',
   'culinho',
@@ -117,6 +118,7 @@ export const HARD_BLOCKED: string[] = [
   'arrombar ela', 'arrombei toda', 'arrombar toda',
   'pegar de 4', 'mulher de 4', 'colocar de 4',
   'entro com a pica', 'mete a pica', 'meter a pica',
+  'enfia o meninao', 'meter o meninao', 'mete o meninao',
   'com o cu', 'no cu', 'no teu cu', 'no seu cu',
   'pegar de quatro', 'mulher de quatro', 'colocar de quatro',
   'vou te mandar', 'te mandar uns videos',
@@ -187,7 +189,6 @@ export const HARD_BLOCKED: string[] = [
   'trepada', 'trepadas',
   'sirica', 'siririca',
   'bilau',
-  'porra',
   'peitos', 'peituda', 'peitudas',
   'tesuda', 'tesudas', 'tesudo', 'tezao', 'tezuda', 'tezudo',
   'tarada',
@@ -216,6 +217,10 @@ export const HARD_BLOCKED: string[] = [
   'faz um favor e some', 'faz o mundo um favor',
   'nasceu errado', 'voce nasceu errado',
   'desperdicio de esperma',
+  'tomar alvejante', 'deveria tomar alvejante', 'toma alvejante',
+  'beber alvejante',
+  'sentem pena de voce', 'sentem pena de tu',
+  'pais sentem pena',
 
   // ── Assedio / bullying / humilhacao ──
   'vergonha pra familia', 'vergonha pra tua familia', 'vergonha pra sua familia',
@@ -303,6 +308,8 @@ export const CONTEXT_SENSITIVE: string[] = [
   'foda',        // "caralho, hoje ta foda" como exclamacao
   'merda', 'merdao', // "que merda", "dia de merda"
   'bosta',           // "isso e uma bosta", "que bosta"
+  'putaria',         // "que putaria e essa" como exclamacao
+  'porra',           // "que porra" como exclamacao
   'caralha', 'caralhudo',  // variantes de caralho
   // Movidos de abbreviation warnings (contexto inocente comum)
   'gostosa', 'gostoso',  // "comida gostosa", "dia gostoso"
@@ -401,7 +408,9 @@ export const SELF_EXPRESSION_PATTERNS: RegExp[] = [
   /\bque\s+bosta\b/i,         // "que bosta"
   /\bque\s+merda\b/i,         // "que merda"
   /\bdia\s+de\s+merda\b/i,    // "dia de merda"
-  /\bisso\s+e\s+uma\s+(merda|bosta)\b/i,  // "isso e uma merda"
+  /\bisso\s+e\s+uma\s+(merda|bosta|putaria|porra)\b/i,  // "isso e uma merda/putaria"
+  /\bque\s+porra\b/i,          // "que porra e essa"
+  /\bque\s+putaria\b/i,        // "que putaria"
   /\bta\s+foda\b/i,         // "ta foda"
   /\be\s+foda\b/i,          // "e foda"
 ];
