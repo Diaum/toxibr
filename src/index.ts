@@ -2,7 +2,14 @@
 // Biblioteca de moderação de conteúdo para português brasileiro.
 
 export { filterContent, createFilter, censorContent, createCensor, normalize } from './filter';
-export type { FilterResult, FilterReason, CensorResult, ToxiBROptions, Severity, SeverityConfig } from './types';
+export type {
+  FilterResult,
+  FilterReason,
+  CensorResult,
+  ToxiBROptions,
+  Severity,
+  SeverityConfig,
+} from './types';
 export {
   HARD_BLOCKED,
   CONTEXT_SENSITIVE,
