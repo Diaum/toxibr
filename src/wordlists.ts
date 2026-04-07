@@ -63,6 +63,10 @@ export const ABBREVIATION_MAP: Record<string, string> = {
   xrc: 'xereca',
   xib: 'xibiu',
   pz: 'pauzao',
+  // Issue #42 — novos termos
+  prn: 'porno',
+  sx: 'sexo',
+  trd: 'tarado',
 };
 
 /** Palavras SEMPRE bloqueadas, independente do contexto. */
@@ -104,6 +108,11 @@ export const HARD_BLOCKED: string[] = [
   'brasileirinhas',
 
   // ── Conteudo sexual explicito ──
+  // Issue #42 — termos não capturados
+  'tarado', 'tarada',
+  'cuzinho',
+  'gozo', 'gozos',
+  'sexo',
   'punheteiro', 'punheteira', 'punheteirinho', 'punheteirinha',
   'punheta', 'punhetao', 'punhetinha',
   'batendo uma', 'bora bater uma', 'bater uma', 'gozando',
@@ -159,6 +168,8 @@ export const HARD_BLOCKED: string[] = [
   'corno', 'cornudo', 'cornuda',
   'rabeta', 'gulosa', 'cunhete',
   'bunda', 'pauzao', 'fodido',
+  // Issue #42 — expansões de abreviações sem entrada em HARD_BLOCKED
+  'foda-se', 'puta que pariu', 'urach', 'bucetuda', 'fodendo', 'tesao',
 
   // ── Pedofilia / grooming ──
   'pedo', 'p3do', 'epstein',
@@ -272,7 +283,6 @@ export const HARD_BLOCKED: string[] = [
   'bilau',
   'peitos', 'peituda', 'peitudas',
   'tesuda', 'tesudas', 'tesudo', 'tezao', 'tezuda', 'tezudo',
-  'tarada',
   'safada', 'safadas', 'safado', 'safados',
   'rabuda', 'rabudas',
   'gostozudas', 'greludas',
@@ -429,6 +439,10 @@ export const CONTEXT_SENSITIVE: string[] = [
   'delicia',              // "que delicia de bolo"
   'dp',                 // "dp do prédio", "delegacia de polícia"
   'dupla penetracao',
+  // Issue #42 — context-sensitive: inocentes fora do contexto sexual dirigido
+  'adulto',   // "adulto responsavel" vs "conteudo adulto" dirigido
+  'leite',    // "copo de leite" vs conotacao sexual dirigida
+  'jogar',    // "jogar bola" vs "jogar leite" em contexto dirigido
 ];
 
 /** Emojis SEMPRE bloqueados (inequivocamente ofensivos). */
@@ -503,6 +517,8 @@ export const SEXUAL_SEED_WORDS: string[] = [
   'bafo', 'bambas', 'fundo', 'forca',
   'cachorra', 'arreganhada', 'esfolado',
   'squirt', 'melam', 'melou',
+  // Issue #42
+  'pornografia', 'tarado', 'sexo',
 ];
 
 /** Padrões que indicam fala dirigida a outra pessoa (2ª pessoa). */

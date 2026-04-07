@@ -162,6 +162,9 @@ export function normalize(input: string): string {
 
   // 8. Remove censoring characters (* #) between letters
   t = t.replace(/[*#]+/g, '');
+  // 8c. Convert ! used as bypass for 'i' — only when directly between word chars
+  //     Handles "cuz!nh0" → "cuzinho". Trailing/leading ! (e.g. "valeu!") is untouched.
+  t = t.replace(/(\w)!+(\w)/g, (_, a, b) => a + 'i' + b);
 
   // 8b. Remove dots/dashes between single chars (p.u.t.a → puta)
   t = t.replace(/(\w)[.\-](?=\w[.\-])/g, '$1');
@@ -249,7 +252,8 @@ const FUZZY_ALLOWLIST = new Set([
   'estouro', // fuzzy matches estuprar
   'jogou',
   'jogos',
-  'jogo', // fuzzy matches jorrou
+  'jogo',
+  'jogar', // fuzzy matches jorar (jorrar collapsed)
   'cama', // prefix matches cam4
   'video',
   'videos', // fuzzy matches xvideos
@@ -346,8 +350,20 @@ export function createFilter(options: ToxiBROptions = {}) {
   return function filterContent(text: string): FilterResult {
     const normalized = normalize(text);
 
-    // Layer 0: Censorship bypass detection — words with * or # between letters
-    if (/\w[*#]+\w/.test(text)) {
+    // Layer 0: Censorship bypass detection
+    // * or # between any two letters (p*ta, v#ado)
+    // @ between letters as bypass separator (g@z0, t@r@d0) — distinct from the
+    //   LEET map that converts @ → a for leet-style writes like t@r4d0.
+    // Non-leet digits 2,6,8,9 used as separators — require ≥2 letters on at
+    //   least one side so that technical terms like b2b / ps5 / 2x1 are allowed.
+    // Emojis used as separators within a word (v🍑ado) — same ≥2-letter rule.
+    const _emojiSepRe =
+      /[a-zA-Z]{2,}\p{Extended_Pictographic}[a-zA-Z]|[a-zA-Z]\p{Extended_Pictographic}[a-zA-Z]{2,}/u;
+    if (
+      /[a-zA-Z][*#@]+[a-zA-Z]/.test(text) ||
+      /[a-zA-Z]{2,}[2689]+[a-zA-Z]|[a-zA-Z][2689]+[a-zA-Z]{2,}/.test(text) ||
+      _emojiSepRe.test(text)
+    ) {
       return makeResult('hard_block', 'censorship bypass');
     }
 

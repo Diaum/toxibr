@@ -1,3 +1,4 @@
+import { describe, it, expect, test } from '@jest/globals';
 import {
   filterContent,
   normalize,
@@ -878,5 +879,377 @@ describe('filterBatch', () => {
     const results = batch(['http://example.com', 'seu idiota']);
     expect(results[0].allowed).toBe(true);
     expect(results[1].allowed).toBe(false);
+  });
+});
+
+// ─── Issue #37 — Bypass com números não-leet e emojis ────────────────────────
+
+describe('Issue #37 — numeric bypass (digits 2, 6, 8, 9 as separators)', () => {
+  describe('bypass bloqueado', () => {
+    it('blocks v2ado (viado com 2)', () => {
+      const result = filterContent('v2ado');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+
+    it('blocks vi6do (viado com 6)', () => {
+      const result = filterContent('vi6do');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+
+    it('blocks pu9a (puta com 9)', () => {
+      const result = filterContent('pu9a');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+
+    it('blocks bu6eta (buceta com 6)', () => {
+      const result = filterContent('bu6eta');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+
+    it('blocks vi8do (viado com 8)', () => {
+      const result = filterContent('vi8do');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+
+    it('blocks pu2ta (puta com 2)', () => {
+      const result = filterContent('pu2ta');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+  });
+
+  describe('falsos positivos numéricos — devem passar (CONTENT CLEAN)', () => {
+    it('allows ps5 (console)', () => {
+      expect(filterContent('comprei um ps5').allowed).toBe(true);
+    });
+
+    it('allows b2b (business to business)', () => {
+      expect(filterContent('estrategia b2b').allowed).toBe(true);
+    });
+
+    it('allows 2x1 (promoção)', () => {
+      expect(filterContent('oferta 2x1').allowed).toBe(true);
+    });
+
+    it('allows h2o (química)', () => {
+      expect(filterContent('beba h2o').allowed).toBe(true);
+    });
+
+    it('allows co2 (dióxido de carbono)', () => {
+      expect(filterContent('emissoes de co2').allowed).toBe(true);
+    });
+  });
+});
+
+describe('Issue #37 — emoji bypass (emojis como separadores dentro de palavras)', () => {
+  describe('bypass bloqueado', () => {
+    it('blocks v🍑ado (viado com emoji pêssego)', () => {
+      const result = filterContent('v🍑ado');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+
+    it('blocks pu🍑ta (puta com emoji pêssego)', () => {
+      const result = filterContent('pu🍑ta');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+
+    it('blocks vi🍆do (viado com emoji berinjela)', () => {
+      const result = filterContent('vi🍆do');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+
+    it('blocks bu🌸eta (buceta com emoji flor)', () => {
+      const result = filterContent('bu🌸eta');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+
+    it('blocks ar💢ombado (arrombado com emoji)', () => {
+      const result = filterContent('ar💢ombado');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+  });
+
+  describe('falsos positivos com emojis — devem passar (CONTENT CLEAN)', () => {
+    it('allows "valeu! 😊" (emoji no final da frase)', () => {
+      expect(filterContent('valeu! 😊').allowed).toBe(true);
+    });
+
+    it('allows "boa noite 🌙" (emoji separado do texto)', () => {
+      expect(filterContent('boa noite 🌙').allowed).toBe(true);
+    });
+
+    it('allows "oi! 😊👋" (emojis após pontuação)', () => {
+      expect(filterContent('oi! 😊👋').allowed).toBe(true);
+    });
+
+    it('allows "parabéns! 🎉🎂" (emojis festivos)', () => {
+      expect(filterContent('parabéns! 🎉🎂').allowed).toBe(true);
+    });
+
+    it('allows emoji with only 1 letter on each side (a😊b — não é bypass)', () => {
+      // Apenas 1 letra em cada lado do emoji — não atinge o limite de 2 letras
+      expect(filterContent('a😊b').allowed).toBe(true);
+    });
+  });
+});
+
+describe('Issue #37 — leetspeak legítimo (0, 1, 3, 4, 5, 7) continua funcionando via Layer de tradução', () => {
+  it('blocks 3stupr0 (estupro com leet 3→e, 0→o)', () => {
+    const result = filterContent('3stupr0');
+    expect(result.allowed).toBe(false);
+  });
+
+  it('blocks v14do (viado com leet 1→i, 4→a)', () => {
+    const result = filterContent('v14do');
+    expect(result.allowed).toBe(false);
+  });
+
+  it('blocks 3stup4dor (estuprador com leet)', () => {
+    const result = filterContent('3stup4dor');
+    expect(result.allowed).toBe(false);
+  });
+
+  it('blocks bu53t4 (buceta com leet 5→s, 3→e, 4→a)', () => {
+    const result = filterContent('bu53t4');
+    expect(result.allowed).toBe(false);
+  });
+
+  it('normalize translates leet digits correctly', () => {
+    expect(normalize('v14do')).toContain('viado');
+    expect(normalize('3stupr0')).toContain('estupr');
+    expect(normalize('bu53t4')).toContain('buseta');
+  });
+});
+
+// ─── Issue #42 — 10 Termos Não Capturados ────────────────────────────────────
+
+describe('[Issue #42] - 10 Termos Reportados', () => {
+  // ── pornografia ────────────────────────────────────────────────────────────
+
+  describe('pornografia — variantes de bypass', () => {
+    it('blocks p0rn0gr4f14 (leet: 0→o, 4→a)', () => {
+      const result = filterContent('p0rn0gr4f14');
+      expect(result.allowed).toBe(false);
+    });
+
+    it('blocks p*rn*gr*f** (Layer 0: * entre letras)', () => {
+      const result = filterContent('p*rn*gr*f**');
+      expect(result.allowed).toBe(false);
+    });
+
+    it('blocks p0rn0gr@f14 (@ → a via leet + 0→o, 1→i, 4→a)', () => {
+      const result = filterContent('p0rn0gr@f14');
+      expect(result.allowed).toBe(false);
+    });
+
+    it('normalize converte p0rn0gr4f14 para pornografia', () => {
+      expect(normalize('p0rn0gr4f14')).toContain('pornografia');
+    });
+  });
+
+  // ── tarado ─────────────────────────────────────────────────────────────────
+
+  describe('tarado — variantes de bypass', () => {
+    it('blocks t4r4d0 (leet: 4→a, 0→o)', () => {
+      const result = filterContent('t4r4d0');
+      expect(result.allowed).toBe(false);
+    });
+
+    it('blocks t@r@d0 (Layer 0: @ como separador)', () => {
+      const result = filterContent('t@r@d0');
+      expect(result.allowed).toBe(false);
+    });
+
+    it('blocks t*r*d* (Layer 0: * entre letras)', () => {
+      const result = filterContent('t*r*d*');
+      expect(result.allowed).toBe(false);
+    });
+
+    it('normalize converte t4r4d0 para tarado', () => {
+      expect(normalize('t4r4d0')).toBe('tarado');
+    });
+  });
+
+  // ── adulto (context-sensitive) ─────────────────────────────────────────────
+
+  describe('adulto — variantes de bypass (context-sensitive)', () => {
+    it('blocks seu 4dult0 (leet 4→a, 0→o + contexto dirigido "seu")', () => {
+      const result = filterContent('seu 4dult0');
+      expect(result.allowed).toBe(false);
+    });
+
+    it('blocks seu @dult0 (@ → a via leet + contexto dirigido)', () => {
+      const result = filterContent('seu @dult0');
+      expect(result.allowed).toBe(false);
+    });
+
+    it('blocks "seu a*dult*o" (Layer 0: * entre letras)', () => {
+      // a*d → letra + * + letra → capturado pelo Layer 0
+      expect(filterContent('seu a*dult*o').allowed).toBe(false);
+    });
+
+    it('normalize converte 4dult0 para adulto', () => {
+      expect(normalize('4dult0')).toBe('adulto');
+    });
+
+    it('allows "adulto responsavel" (sem contexto dirigido — falso positivo prevenido)', () => {
+      expect(filterContent('adulto responsavel').allowed).toBe(true);
+    });
+  });
+
+  // ── cuzinho ────────────────────────────────────────────────────────────────
+
+  describe('cuzinho — variantes de bypass', () => {
+    it('blocks cuz1nh0 (leet: 1→i, 0→o)', () => {
+      const result = filterContent('cuz1nh0');
+      expect(result.allowed).toBe(false);
+    });
+
+    it('blocks cuz!nh0 (! → i entre word chars, 0→o)', () => {
+      const result = filterContent('cuz!nh0');
+      expect(result.allowed).toBe(false);
+    });
+
+    it('blocks cuz*nh* (Layer 0: * entre letras)', () => {
+      const result = filterContent('cuz*nh*');
+      expect(result.allowed).toBe(false);
+    });
+
+    it('normalize converte cuz!nh0 para cuzinho', () => {
+      expect(normalize('cuz!nh0')).toBe('cuzinho');
+    });
+
+    it('normalize converte cuz1nh0 para cuzinho', () => {
+      expect(normalize('cuz1nh0')).toBe('cuzinho');
+    });
+
+    it('does NOT affect trailing ! in normal phrases (falso positivo prevenido)', () => {
+      // "valeu!" — o ! está no final, sem letra depois → não é convertido
+      expect(filterContent('valeu!').allowed).toBe(true);
+    });
+  });
+
+  // ── gozo ───────────────────────────────────────────────────────────────────
+
+  describe('gozo — variantes de bypass', () => {
+    it('blocks g0z0 (leet: 0→o)', () => {
+      const result = filterContent('g0z0');
+      expect(result.allowed).toBe(false);
+    });
+
+    it('blocks g@z0 (Layer 0: @ como separador entre g e z)', () => {
+      // @ entre duas letras é detectado no Layer 0 como bypass
+      const result = filterContent('g@z0');
+      expect(result.allowed).toBe(false);
+    });
+
+    it('blocks g*z* (Layer 0: * entre letras)', () => {
+      const result = filterContent('g*z*');
+      expect(result.allowed).toBe(false);
+    });
+
+    it('normalize converte g0z0 para gozo', () => {
+      expect(normalize('g0z0')).toBe('gozo');
+    });
+  });
+
+  // ── punheteirinha / punheteirinho ──────────────────────────────────────────
+
+  describe('punheteirinha/punheteirinho — variantes de bypass', () => {
+    it('blocks punh3t31r1nh4 (leet para punheteirinha)', () => {
+      const result = filterContent('punh3t31r1nh4');
+      expect(result.allowed).toBe(false);
+    });
+
+    it('blocks punh3t31r1nh0 (leet para punheteirinho)', () => {
+      const result = filterContent('punh3t31r1nh0');
+      expect(result.allowed).toBe(false);
+    });
+
+    it('normalize converte punh3t31r1nh4 para punheteirinha', () => {
+      expect(normalize('punh3t31r1nh4')).toBe('punheteirinha');
+    });
+  });
+
+  // ── sexo ───────────────────────────────────────────────────────────────────
+
+  describe('sexo — variantes de bypass', () => {
+    it('blocks s3x0 (leet: 3→e, 0→o)', () => {
+      const result = filterContent('s3x0');
+      expect(result.allowed).toBe(false);
+    });
+
+    it('blocks "sx" (abreviação via ABBREVIATION_MAP)', () => {
+      const result = filterContent('sx');
+      expect(result.allowed).toBe(false);
+    });
+
+    it('normalize converte s3x0 para sexo', () => {
+      expect(normalize('s3x0')).toBe('sexo');
+    });
+  });
+
+  // ── abreviações novas (prn, sx, trd) ──────────────────────────────────────
+
+  describe('novas abreviações (Issue #42)', () => {
+    it('blocks "prn" (→ porno via ABBREVIATION_MAP)', () => {
+      expect(filterContent('prn').allowed).toBe(false);
+    });
+
+    it('blocks "trd" (→ tarado via ABBREVIATION_MAP)', () => {
+      expect(filterContent('trd').allowed).toBe(false);
+    });
+  });
+
+  // ── combinação: jogar um leite ─────────────────────────────────────────────
+
+  describe('"jogar um leite" — combinação deve ser capturada', () => {
+    it('blocks "jogar um leite" (frase hard-blocked)', () => {
+      const result = filterContent('jogar um leite');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+
+    it('blocks "vou jogar um leite" (frase com contexto)', () => {
+      expect(filterContent('vou jogar um leite').allowed).toBe(false);
+    });
+  });
+
+  // ── integridade: falsos positivos existentes não regridem ─────────────────
+
+  describe('regressao — falsos positivos nao devem ser quebrados', () => {
+    it('allows "oi! 😊" (! trailing — nao e bypass de i)', () => {
+      expect(filterContent('oi! 😊').allowed).toBe(true);
+    });
+
+    it('allows "valeu! 😊" (emoji apos pontuacao)', () => {
+      expect(filterContent('valeu! 😊').allowed).toBe(true);
+    });
+
+    it('allows "parabens! 🎉" (exclamacao no final)', () => {
+      expect(filterContent('parabens! 🎉').allowed).toBe(true);
+    });
+
+    it('allows "adulto responsavel" (adulto sem contexto dirigido)', () => {
+      expect(filterContent('adulto responsavel').allowed).toBe(true);
+    });
+
+    it('allows "jogar bola" (jogar sem conotacao sexual)', () => {
+      expect(filterContent('jogar bola').allowed).toBe(true);
+    });
+
+    it('allows "copo de leite" (leite em contexto inocente)', () => {
+      expect(filterContent('copo de leite').allowed).toBe(true);
+    });
   });
 });
