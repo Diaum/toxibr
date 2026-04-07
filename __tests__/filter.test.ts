@@ -673,3 +673,123 @@ describe('performance', () => {
     expect(elapsed).toBeLessThan(1000);
   });
 });
+
+// ─── Severity levels ─────────────────────────────────────────────────────────
+
+describe('severity levels', () => {
+  it('defaults to severity "block" for all reasons', () => {
+    const result = filterContent('viado');
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) {
+      expect(result.severity).toBe('block');
+    }
+  });
+
+  it('returns severity "block" for default filter on all reason types', () => {
+    // hard_block
+    const r1 = filterContent('viado');
+    if (!r1.allowed) expect(r1.severity).toBe('block');
+
+    // directed_insult
+    const r2 = filterContent('você é um lixo');
+    if (!r2.allowed) expect(r2.severity).toBe('block');
+
+    // fuzzy_match
+    const r3 = filterContent('viadro');
+    if (!r3.allowed) expect(r3.severity).toBe('block');
+
+    // link
+    const r4 = filterContent('https://example.com');
+    if (!r4.allowed) expect(r4.severity).toBe('block');
+
+    // phone
+    const r5 = filterContent('21994709426');
+    if (!r5.allowed) expect(r5.severity).toBe('block');
+
+    // digits_only
+    const r6 = filterContent('55');
+    if (!r6.allowed) expect(r6.severity).toBe('block');
+
+    // offensive_emoji
+    const r7 = filterContent('🖕');
+    if (!r7.allowed) expect(r7.severity).toBe('block');
+  });
+
+  it('respects custom severity per reason', () => {
+    const filter = createFilter({
+      severity: {
+        hard_block: 'block',
+        directed_insult: 'warn',
+        fuzzy_match: 'flag',
+      },
+    });
+
+    const r1 = filter('viado');
+    expect(r1.allowed).toBe(false);
+    if (!r1.allowed) expect(r1.severity).toBe('block');
+
+    const r2 = filter('você é um lixo');
+    expect(r2.allowed).toBe(false);
+    if (!r2.allowed) expect(r2.severity).toBe('warn');
+
+    const r3 = filter('viadro');
+    expect(r3.allowed).toBe(false);
+    if (!r3.allowed) expect(r3.severity).toBe('flag');
+  });
+
+  it('uses "block" as default for unconfigured reasons', () => {
+    const filter = createFilter({
+      severity: { directed_insult: 'warn' },
+    });
+
+    // hard_block not configured → defaults to 'block'
+    const r1 = filter('viado');
+    if (!r1.allowed) expect(r1.severity).toBe('block');
+
+    // directed_insult configured → 'warn'
+    const r2 = filter('seu idiota');
+    if (!r2.allowed) expect(r2.severity).toBe('warn');
+  });
+
+  it('allowed results have no severity field', () => {
+    const filter = createFilter({ severity: { hard_block: 'warn' } });
+    const result = filter('oi tudo bem');
+    expect(result.allowed).toBe(true);
+    expect('severity' in result).toBe(false);
+  });
+
+  it('severity works with link/phone/digits/emoji reasons', () => {
+    const filter = createFilter({
+      severity: {
+        link: 'flag',
+        phone: 'warn',
+        digits_only: 'flag',
+        offensive_emoji: 'warn',
+      },
+    });
+
+    const r1 = filter('https://example.com');
+    if (!r1.allowed) expect(r1.severity).toBe('flag');
+
+    const r2 = filter('21994709426');
+    if (!r2.allowed) expect(r2.severity).toBe('warn');
+
+    const r3 = filter('55');
+    if (!r3.allowed) expect(r3.severity).toBe('flag');
+
+    const r4 = filter('🖕');
+    if (!r4.allowed) expect(r4.severity).toBe('warn');
+  });
+
+  it('severity works with suspicious_content reason', () => {
+    const filter = createFilter({
+      severity: { suspicious_content: 'flag' },
+    });
+
+    const r = filter('bola leite molhada duro jato');
+    if (!r.allowed) {
+      expect(r.reason).toBe('suspicious_content');
+      expect(r.severity).toBe('flag');
+    }
+  });
+});

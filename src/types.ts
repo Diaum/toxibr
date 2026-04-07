@@ -8,9 +8,11 @@ export type FilterReason =
   | 'digits_only'
   | 'offensive_emoji';
 
+export type Severity = 'block' | 'warn' | 'flag';
+
 export type FilterResult =
   | { allowed: true }
-  | { allowed: false; reason: FilterReason; matched: string };
+  | { allowed: false; reason: FilterReason; matched: string; severity: Severity };
 
 export interface CensorResult {
   /** The censored text with blocked words replaced */
@@ -20,6 +22,9 @@ export interface CensorResult {
   /** List of words that were censored */
   matches: Array<{ word: string; reason: FilterReason; matched: string }>;
 }
+
+/** Severity configuration per FilterReason. Default: all 'block'. */
+export type SeverityConfig = Partial<Record<FilterReason, Severity>>;
 
 export interface ToxiBROptions {
   /** Additional words to hard-block (merged with built-in list). */
@@ -40,4 +45,6 @@ export interface ToxiBROptions {
   censorPhones?: boolean;
   /** Censor links instead of blocking. Default: false */
   censorLinks?: boolean;
+  /** Severity level per filter reason. Default: all 'block'. */
+  severity?: SeverityConfig;
 }

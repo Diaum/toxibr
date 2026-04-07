@@ -12,7 +12,7 @@ import {
   OFFENSIVE_EMOJI_SEQUENCES,
   CONTEXT_SENSITIVE_EMOJIS,
 } from './wordlists';
-import type { FilterResult, CensorResult, ToxiBROptions } from './types';
+import type { FilterResult, CensorResult, ToxiBROptions, FilterReason, Severity } from './types';
 
 // ─── Homoglyph map (Cyrillic → Latin) ────────────────────────────────────────
 
@@ -198,7 +198,16 @@ export function createFilter(options: ToxiBROptions = {}) {
     blockPhones = true,
     blockDigitsOnly = true,
     blockEmojis = true,
+    severity: severityConfig = {},
   } = options;
+
+  function getSeverity(reason: FilterReason): Severity {
+    return severityConfig[reason] ?? 'block';
+  }
+
+  function makeResult(reason: FilterReason, matched: string): FilterResult {
+    return { allowed: false, reason, matched, severity: getSeverity(reason) };
+  }
 
   const allBlocked = [...HARD_BLOCKED, ...extraBlockedWords];
   const allContext = [...CONTEXT_SENSITIVE, ...extraContextWords];
@@ -228,39 +237,39 @@ export function createFilter(options: ToxiBROptions = {}) {
 
     // Layer 0: Censorship bypass detection — words with * or # between letters
     if (/\w[*#]+\w/.test(text)) {
-      return { allowed: false, reason: 'hard_block', matched: 'censorship bypass' };
+      return makeResult('hard_block', 'censorship bypass');
     }
 
     // Layer 0z: Pre-normalization exact matches (terms that break after leetspeak/normalization)
     if (/\bd4\b/i.test(text)) {
-      return { allowed: false, reason: 'hard_block', matched: 'd4' };
+      return makeResult('hard_block', 'd4');
     }
     if (/\d+\s*cm\b/i.test(text)) {
-      return { allowed: false, reason: 'hard_block', matched: 'medida cm' };
+      return makeResult('hard_block', 'medida cm');
     }
     if (/\b-18\b/.test(text)) {
-      return { allowed: false, reason: 'hard_block', matched: '-18' };
+      return makeResult('hard_block', '-18');
     }
 
     // Layer 0a: Block links/URLs
     if (blockLinks && LINK_REGEX.test(text)) {
-      return { allowed: false, reason: 'link', matched: 'link' };
+      return makeResult('link', 'link');
     }
 
     // Layer 0b: Block phone numbers
     if (blockPhones) {
       if (PHONE_REGEX.test(text)) {
-        return { allowed: false, reason: 'phone', matched: 'telefone' };
+        return makeResult('phone', 'telefone');
       }
       const totalDigits = text.replace(/\D/g, '').length;
       if (totalDigits >= 5) {
-        return { allowed: false, reason: 'phone', matched: 'telefone' };
+        return makeResult('phone', 'telefone');
       }
     }
 
     // Layer 0c: Block messages that are only digits
     if (blockDigitsOnly && /^\d+$/.test(text.trim())) {
-      return { allowed: false, reason: 'digits_only', matched: 'numero isolado' };
+      return makeResult('digits_only', 'numero isolado');
     }
 
     // Layer 0d: Offensive emojis (checked on raw text — normalization strips emojis)
@@ -271,14 +280,14 @@ export function createFilter(options: ToxiBROptions = {}) {
       // Always-blocked emojis
       for (const emoji of OFFENSIVE_EMOJIS) {
         if (emojiText.includes(emoji)) {
-          return { allowed: false, reason: 'offensive_emoji', matched: emoji };
+          return makeResult('offensive_emoji', emoji);
         }
       }
 
       // Always-blocked sequences
       for (const seq of OFFENSIVE_EMOJI_SEQUENCES) {
         if (emojiText.includes(seq)) {
-          return { allowed: false, reason: 'offensive_emoji', matched: seq };
+          return makeResult('offensive_emoji', seq);
         }
       }
 
@@ -286,7 +295,7 @@ export function createFilter(options: ToxiBROptions = {}) {
       for (const emoji of CONTEXT_SENSITIVE_EMOJIS) {
         if (!emojiText.includes(emoji)) continue;
         if (DIRECTED_PATTERNS.some((p) => p.test(normalized))) {
-          return { allowed: false, reason: 'offensive_emoji', matched: emoji };
+          return makeResult('offensive_emoji', emoji);
         }
       }
     }
@@ -294,7 +303,7 @@ export function createFilter(options: ToxiBROptions = {}) {
     // Layer 1: Hard-blocked words
     for (const { word, regex } of hardBlockedRegexes) {
       if (regex.test(normalized)) {
-        return { allowed: false, reason: 'hard_block', matched: word };
+        return makeResult('hard_block', word);
       }
     }
 
@@ -311,7 +320,7 @@ export function createFilter(options: ToxiBROptions = {}) {
           for (const blocked of candidates) {
             const dist = levenshtein(msgWord, blocked, threshold);
             if (dist > 0 && dist <= threshold) {
-              return { allowed: false, reason: 'fuzzy_match', matched: blocked };
+              return makeResult('fuzzy_match', blocked);
             }
           }
         }
@@ -327,7 +336,7 @@ export function createFilter(options: ToxiBROptions = {}) {
         for (const blocked of prefixWords) {
           if (blocked.length < msgWord.length) continue;
           if (blocked.startsWith(msgWord) && msgWord.length >= blocked.length * 0.55) {
-            return { allowed: false, reason: 'hard_block', matched: blocked };
+            return makeResult('hard_block', blocked);
           }
         }
       }
@@ -378,7 +387,7 @@ export function createFilter(options: ToxiBROptions = {}) {
 
         // Directed is closer (or equal) than self-expression → block
         if (closestDirected < Infinity && closestDirected <= closestSelfExpr) {
-          return { allowed: false, reason: 'directed_insult', matched: word };
+          return makeResult('directed_insult', word);
         }
       }
 
@@ -396,11 +405,7 @@ export function createFilter(options: ToxiBROptions = {}) {
         const window = words.slice(i, i + windowSize);
         const seedMatches = window.filter((w) => seedSet.has(w));
         if (seedMatches.length >= 3) {
-          return {
-            allowed: false,
-            reason: 'suspicious_content',
-            matched: seedMatches.join(', '),
-          };
+          return makeResult('suspicious_content', seedMatches.join(', '));
         }
       }
 
@@ -408,11 +413,7 @@ export function createFilter(options: ToxiBROptions = {}) {
       if (words.length < windowSize && words.length >= 3) {
         const seedMatches = words.filter((w) => seedSet.has(w));
         if (seedMatches.length >= 3) {
-          return {
-            allowed: false,
-            reason: 'suspicious_content',
-            matched: seedMatches.join(', '),
-          };
+          return makeResult('suspicious_content', seedMatches.join(', '));
         }
       }
     }
