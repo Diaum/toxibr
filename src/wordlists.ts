@@ -4,6 +4,7 @@
 // Variantes com @ e leetspeak NAO precisam estar aqui — o normalizador cuida.
 
 /** Abreviações comuns BR → palavra completa (para expansão na normalização). */
+// prettier-ignore
 export const ABBREVIATION_MAP: Record<string, string> = {
   ppk: 'pepeca',
   pqp: 'puta que pariu',
@@ -65,6 +66,7 @@ export const ABBREVIATION_MAP: Record<string, string> = {
 };
 
 /** Palavras SEMPRE bloqueadas, independente do contexto. */
+// prettier-ignore
 export const HARD_BLOCKED: string[] = [
   // ── Slurs / ofensas graves ──
   'viado', 'viadinho', 'viadao',
@@ -351,6 +353,7 @@ export const HARD_BLOCKED: string[] = [
 
 /** Palavras bloqueadas APENAS quando dirigidas a outra pessoa.
  *  Permitidas em auto-expressão (ex: "eu me sinto um lixo"). */
+// prettier-ignore
 export const CONTEXT_SENSITIVE: string[] = [
   'lixo',
   'inutil',
@@ -398,6 +401,7 @@ export const CONTEXT_SENSITIVE: string[] = [
 ];
 
 /** Emojis SEMPRE bloqueados (inequivocamente ofensivos). */
+// prettier-ignore
 export const OFFENSIVE_EMOJIS: string[] = [
   '🖕',     // dedo do meio
   '🖕🏻', '🖕🏼', '🖕🏽', '🖕🏾', '🖕🏿', // variantes de tom de pele
@@ -405,6 +409,7 @@ export const OFFENSIVE_EMOJIS: string[] = [
 ];
 
 /** Sequências de emojis ofensivas (combinações inequívocas). */
+// prettier-ignore
 export const OFFENSIVE_EMOJI_SEQUENCES: string[] = [
   // ── Conotação sexual explícita ──
   '🍌',
@@ -433,6 +438,7 @@ export const OFFENSIVE_EMOJI_SEQUENCES: string[] = [
 ];
 
 /** Emojis bloqueados APENAS quando dirigidos a outra pessoa (contexto racial). */
+// prettier-ignore
 export const CONTEXT_SENSITIVE_EMOJIS: string[] = [
   '🐵',     // macaco
   '🐒',     // macaco
@@ -441,6 +447,7 @@ export const CONTEXT_SENSITIVE_EMOJIS: string[] = [
 
 /** Palavras-semente sexuais — inocentes sozinhas, suspeitas quando 3+ aparecem juntas.
  *  Todas devem estar em lowercase, sem acentos. */
+// prettier-ignore
 export const SEXUAL_SEED_WORDS: string[] = [
   // Corpo / anatomia
   'pau', 'pica', 'rola', 'cu', 'rabo', 'bola', 'bolas', 'saco',
@@ -470,8 +477,8 @@ export const DIRECTED_PATTERNS: RegExp[] = [
   /\bteu\b/i,
   /\bseu\b/i,
   /\bsua\b/i,
-  /\bvoc[eê]s?\s+[eé]\s+um[a]?\b/i,   // "voce e um/uma" (requer pronome antes)
-  /\btu\s+[eé]\s+um[a]?\b/i,          // "tu e um/uma"
+  /\bvoc[eê]s?\s+[eé]\s+um[a]?\b/i, // "voce e um/uma" (requer pronome antes)
+  /\btu\s+[eé]\s+um[a]?\b/i, // "tu e um/uma"
   /\bvai\s+se\b/i,
   /\bcala\s+a?\s*boca\b/i,
   /\bsome\s+daqui\b/i,
@@ -499,19 +506,19 @@ export const SELF_EXPRESSION_PATTERNS: RegExp[] = [
   /\bpau\s+mandado\b/i,
   /\bpau\s+de\b/i,
   /\bpau\s+pra\b/i,
-  /\bcacete[\s,!.]+\b/i,    // exclamacao isolada
-  /\bque\s+pica\b/i,        // "que legal" regional
+  /\bcacete[\s,!.]+\b/i, // exclamacao isolada
+  /\bque\s+pica\b/i, // "que legal" regional
   // Padroes inocentes para pinto/dp (v2.1)
-  /\bpinto\s+de\b/i,        // "pinto de ovo"
-  /\beu\s+pinto\b/i,        // "eu pinto paredes"
-  /\bdp\s+d[oe]\b/i,        // "dp do prédio"
+  /\bpinto\s+de\b/i, // "pinto de ovo"
+  /\beu\s+pinto\b/i, // "eu pinto paredes"
+  /\bdp\s+d[oe]\b/i, // "dp do prédio"
   // Padroes de exclamacao com palavroes (nao dirigido)
-  /\bque\s+bosta\b/i,         // "que bosta"
-  /\bque\s+merda\b/i,         // "que merda"
-  /\bdia\s+de\s+merda\b/i,    // "dia de merda"
-  /\bisso\s+e\s+uma\s+(merda|bosta|putaria|porra)\b/i,  // "isso e uma merda/putaria"
-  /\bque\s+porra\b/i,          // "que porra e essa"
-  /\bque\s+putaria\b/i,        // "que putaria"
-  /\bta\s+foda\b/i,         // "ta foda"
-  /\be\s+foda\b/i,          // "e foda"
+  /\bque\s+bosta\b/i, // "que bosta"
+  /\bque\s+merda\b/i, // "que merda"
+  /\bdia\s+de\s+merda\b/i, // "dia de merda"
+  /\bisso\s+e\s+uma\s+(merda|bosta|putaria|porra)\b/i, // "isso e uma merda/putaria"
+  /\bque\s+porra\b/i, // "que porra e essa"
+  /\bque\s+putaria\b/i, // "que putaria"
+  /\bta\s+foda\b/i, // "ta foda"
+  /\be\s+foda\b/i, // "e foda"
 ];
