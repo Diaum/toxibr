@@ -15,6 +15,28 @@ interface FalsePositivePanelProps {
   onClear: () => void;
 }
 
+function extractContext(word: string, fullText: string): string {
+  const lower = fullText.toLowerCase();
+  const wordLower = word.toLowerCase();
+  const idx = lower.indexOf(wordLower);
+  if (idx === -1) return fullText.substring(0, 100);
+
+  // Get ~5 words before and after
+  const before = fullText.substring(0, idx);
+  const after = fullText.substring(idx + word.length);
+
+  const wordsBefore = before.split(/\s+/).filter(Boolean);
+  const wordsAfter = after.split(/\s+/).filter(Boolean);
+
+  const contextBefore = wordsBefore.slice(-5).join(' ');
+  const contextAfter = wordsAfter.slice(0, 5).join(' ');
+
+  const prefix = wordsBefore.length > 5 ? '...' : '';
+  const suffix = wordsAfter.length > 5 ? '...' : '';
+
+  return `${prefix}${contextBefore} **[${word}]** ${contextAfter}${suffix}`;
+}
+
 export default function FalsePositivePanel({
   entries,
   onRemove,
@@ -42,12 +64,12 @@ export default function FalsePositivePanel({
         'Essas palavras foram bloqueadas pelo filtro mas sao inocentes no contexto em que foram usadas.'
       );
       sections.push('');
-      sections.push('| Palavra | Detectada como | Reason | Contexto |');
-      sections.push('|---------|---------------|--------|----------|');
       for (const e of fpEntries) {
-        sections.push(
-          `| \`${e.word}\` | \`${e.matched}\` | ${e.reason} | "${e.context.substring(0, 80)}${e.context.length > 80 ? '...' : ''}" |`
-        );
+        const ctx = extractContext(e.word, e.context);
+        sections.push(`**Palavra:** \`${e.word}\``);
+        sections.push(`**Detectada como:** \`${e.matched}\` (${e.reason})`);
+        sections.push(`**Contexto:** ${ctx}`);
+        sections.push('');
       }
       sections.push('');
       sections.push(
@@ -61,12 +83,11 @@ export default function FalsePositivePanel({
       sections.push('');
       sections.push('Essas palavras ou frases passaram pelo filtro mas contem conteudo toxico.');
       sections.push('');
-      sections.push('| Palavra/frase | Contexto |');
-      sections.push('|--------------|----------|');
       for (const e of missedEntries) {
-        sections.push(
-          `| \`${e.word}\` | "${e.context.substring(0, 80)}${e.context.length > 80 ? '...' : ''}" |`
-        );
+        const ctx = extractContext(e.word, e.context);
+        sections.push(`**Palavra/frase:** \`${e.word}\``);
+        sections.push(`**Contexto:** ${ctx}`);
+        sections.push('');
       }
       sections.push('');
       sections.push(
