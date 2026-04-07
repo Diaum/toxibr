@@ -1,16 +1,9 @@
-// ─── ToxiBR — Content Filter for Brazilian Portuguese ────────────────────────
+// ─── ToxiBR — Content Filter ─────────────────────────────────────────────────
 // Pure synchronous string ops — no I/O, < 1ms for 2000 chars.
 
-import {
-  ABBREVIATION_MAP,
-  HARD_BLOCKED,
-  CONTEXT_SENSITIVE,
-  DIRECTED_PATTERNS,
-  SELF_EXPRESSION_PATTERNS,
-  OFFENSIVE_EMOJIS,
-  OFFENSIVE_EMOJI_SEQUENCES,
-  CONTEXT_SENSITIVE_EMOJIS,
-} from './wordlists';
+import { ptBRLocale } from './locales/pt-BR';
+import { LOCALE_REGISTRY, mergeLocaleData } from './locales/index';
+import type { LocaleData } from './locales/index';
 import type { FilterResult, ToxiBROptions } from './types';
 
 // ─── Homoglyph map (Cyrillic → Latin) ────────────────────────────────────────
@@ -28,9 +21,9 @@ const LEET: Record<string, string> = {
   '7': 't', '@': 'a', '$': 's',
 };
 
-// ─── Normalize text for comparison ───────────────────────────────────────────
+// ─── Internal normalize (locale-aware) ───────────────────────────────────────
 
-export function normalize(input: string): string {
+function normalizeWith(input: string, abbreviationMap: Record<string, string>): string {
   let t = input;
 
   // 1. Remove zero-width and invisible chars
@@ -61,11 +54,16 @@ export function normalize(input: string): string {
   // 9. Remove spaces between isolated single chars (p u t a → puta)
   t = t.replace(/\b(\w)\s(\w)\s(\w)/g, (_, a, b, c) => a + b + c);
 
-  // 10. Expand known abbreviations
+  // 10. Expand known abbreviations (locale-specific)
   const words = t.split(/\s+/);
-  t = words.map(w => ABBREVIATION_MAP[w] ?? w).join(' ');
+  t = words.map(w => abbreviationMap[w] ?? w).join(' ');
 
   return t;
+}
+
+/** Normalize text for comparison. Uses pt-BR abbreviations by default (backward compat). */
+export function normalize(input: string): string {
+  return normalizeWith(input, ptBRLocale.ABBREVIATION_MAP);
 }
 
 // ─── Levenshtein distance ───────────────────────────────────────────────────
@@ -75,7 +73,6 @@ function levenshtein(a: string, b: string, maxDist: number): number {
   const lb = b.length;
   if (Math.abs(la - lb) > maxDist) return maxDist + 1;
 
-  // Single-row DP with early termination
   let prev = new Array(lb + 1);
   for (let j = 0; j <= lb; j++) prev[j] = j;
 
@@ -88,7 +85,6 @@ function levenshtein(a: string, b: string, maxDist: number): number {
       curr[j] = Math.min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost);
       if (curr[j] < rowMin) rowMin = curr[j];
     }
-    // If the minimum value in this row already exceeds maxDist, bail early
     if (rowMin > maxDist) return maxDist + 1;
     prev = curr;
   }
@@ -97,7 +93,7 @@ function levenshtein(a: string, b: string, maxDist: number): number {
 }
 
 function getFuzzyThreshold(wordLength: number): number {
-  if (wordLength <= 4) return 0; // disabled for short words
+  if (wordLength <= 4) return 0;
   if (wordLength <= 7) return 1;
   return 2;
 }
@@ -110,9 +106,9 @@ function escapeRegex(str: string): string {
 
 // ─── Build regex list from words ─────────────────────────────────────────────
 
-function buildRegexes(words: string[]): { word: string; regex: RegExp }[] {
+function buildRegexes(words: string[], abbreviationMap: Record<string, string>): { word: string; regex: RegExp }[] {
   return words.map(word => {
-    const n = normalize(word);
+    const n = normalizeWith(word, abbreviationMap);
     const pattern = n.includes(' ') ? escapeRegex(n) : `\\b${escapeRegex(n)}\\b`;
     return { word, regex: new RegExp(pattern) };
   });
@@ -122,6 +118,24 @@ function buildRegexes(words: string[]): { word: string; regex: RegExp }[] {
 
 const PHONE_REGEX = /(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?\d{4,5}[\s.-]?\d{4}/;
 const LINK_REGEX = /https?:\/\/|www\.|\.com|\.net|\.org|\.br|\.io|\.me|\.tv|\.co|\.link|\.xyz/i;
+
+// ─── Resolve locale data from options ────────────────────────────────────────
+
+function resolveLocaleData(options: ToxiBROptions): LocaleData {
+  if (options.locales && options.locales.length > 0) {
+    return mergeLocaleData(options.locales);
+  }
+  if (options.locale) {
+    const localeNames = Array.isArray(options.locale) ? options.locale : [options.locale];
+    const localeDataList = localeNames.map(name => {
+      const data = LOCALE_REGISTRY[name];
+      if (!data) throw new Error(`ToxiBR: unknown locale "${name}". Valid values: ${Object.keys(LOCALE_REGISTRY).join(', ')}`);
+      return data;
+    });
+    return mergeLocaleData(localeDataList);
+  }
+  return ptBRLocale;
+}
 
 // ─── Create filter instance ──────────────────────────────────────────────────
 
@@ -135,17 +149,21 @@ export function createFilter(options: ToxiBROptions = {}) {
     blockEmojis = true,
   } = options;
 
-  const allBlocked = [...HARD_BLOCKED, ...extraBlockedWords];
-  const allContext = [...CONTEXT_SENSITIVE, ...extraContextWords];
+  const localeData = resolveLocaleData(options);
 
-  const hardBlockedRegexes = buildRegexes(allBlocked);
-  const contextSensitiveRegexes = buildRegexes(allContext);
+  const allBlocked = [...localeData.HARD_BLOCKED, ...extraBlockedWords];
+  const allContext = [...localeData.CONTEXT_SENSITIVE, ...extraContextWords];
+  const { ABBREVIATION_MAP, DIRECTED_PATTERNS, SELF_EXPRESSION_PATTERNS,
+    OFFENSIVE_EMOJIS, OFFENSIVE_EMOJI_SEQUENCES, CONTEXT_SENSITIVE_EMOJIS } = localeData;
 
-  // Pre-normalized wordlist for fuzzy matching, bucketed by length (deduplicated)
+  const hardBlockedRegexes = buildRegexes(allBlocked, ABBREVIATION_MAP);
+  const contextSensitiveRegexes = buildRegexes(allContext, ABBREVIATION_MAP);
+
+  // Pre-normalized wordlist for fuzzy matching, bucketed by length
   const fuzzyByLength = new Map<number, string[]>();
   const seenFuzzy = new Set<string>();
   for (const w of allBlocked) {
-    const n = normalize(w);
+    const n = normalizeWith(w, ABBREVIATION_MAP);
     if (n.includes(' ') || n.length < 5 || seenFuzzy.has(n)) continue;
     seenFuzzy.add(n);
     const len = n.length;
@@ -154,7 +172,7 @@ export function createFilter(options: ToxiBROptions = {}) {
   }
 
   return function filterContent(text: string): FilterResult {
-    const normalized = normalize(text);
+    const normalized = normalizeWith(text, ABBREVIATION_MAP);
 
     // Layer 0a: Block links/URLs
     if (blockLinks && LINK_REGEX.test(text)) {
@@ -177,26 +195,22 @@ export function createFilter(options: ToxiBROptions = {}) {
       return { allowed: false, reason: 'digits_only', matched: 'numero isolado' };
     }
 
-    // Layer 0d: Offensive emojis (checked on raw text — normalization strips emojis)
+    // Layer 0d: Offensive emojis (checked on raw text)
     if (blockEmojis) {
-      // Strip zero-width joiners and variation selectors for comparison
       const emojiText = text.replace(/[\uFE00-\uFE0F\u200D]/g, '');
 
-      // Always-blocked emojis
       for (const emoji of OFFENSIVE_EMOJIS) {
         if (emojiText.includes(emoji)) {
           return { allowed: false, reason: 'offensive_emoji', matched: emoji };
         }
       }
 
-      // Always-blocked sequences
       for (const seq of OFFENSIVE_EMOJI_SEQUENCES) {
         if (emojiText.includes(seq)) {
           return { allowed: false, reason: 'offensive_emoji', matched: seq };
         }
       }
 
-      // Context-sensitive emojis (only block when directed at someone)
       for (const emoji of CONTEXT_SENSITIVE_EMOJIS) {
         if (!emojiText.includes(emoji)) continue;
         if (DIRECTED_PATTERNS.some(p => p.test(normalized))) {
@@ -212,13 +226,12 @@ export function createFilter(options: ToxiBROptions = {}) {
       }
     }
 
-    // Layer 1b: Fuzzy match (Levenshtein) — fallback for typo variants
+    // Layer 1b: Fuzzy match (Levenshtein)
     {
       const messageWords = new Set(normalized.split(/\s+/));
       for (const msgWord of messageWords) {
         const threshold = getFuzzyThreshold(msgWord.length);
         if (threshold === 0) continue;
-        // Only check blocked words whose length is within threshold range
         for (let len = msgWord.length - threshold; len <= msgWord.length + threshold; len++) {
           const candidates = fuzzyByLength.get(len);
           if (!candidates) continue;
@@ -251,6 +264,6 @@ export function createFilter(options: ToxiBROptions = {}) {
   };
 }
 
-// ─── Default filter (zero config) ────────────────────────────────────────────
+// ─── Default filter (zero config, pt-BR) ─────────────────────────────────────
 
 export const filterContent = createFilter();

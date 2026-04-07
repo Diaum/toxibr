@@ -1,8 +1,13 @@
 // ─── ToxiBR ──────────────────────────────────────────────────────────────────
-// Biblioteca de moderação de conteúdo para português brasileiro.
+// Biblioteca de moderação de conteúdo multilíngue.
 
 export { filterContent, createFilter, normalize } from './filter';
-export type { FilterResult, FilterReason, ToxiBROptions } from './types';
+export type { FilterResult, FilterReason, ToxiBROptions, SupportedLocale, LocaleData } from './types';
+
+// ─── Locale data (tree-shakeable) ────────────────────────────────────────────
+export { ptBRLocale, ptPTLocale, esLocale, mergeLocaleData } from './locales/index';
+
+// ─── PT-BR wordlists (backward compatibility) ────────────────────────────────
 export {
   HARD_BLOCKED,
   CONTEXT_SENSITIVE,

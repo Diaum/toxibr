@@ -1,9 +1,18 @@
 #!/usr/bin/env ts-node
 // ─── Wordlist Validator ──────────────────────────────────────────────────────
-// Checks for duplicates within and across wordlists.
+// Checks for duplicates within and across wordlists for all locales.
 // Run: npx ts-node scripts/validate-wordlists.ts
 
-import { HARD_BLOCKED, CONTEXT_SENSITIVE, ABBREVIATION_MAP } from '../src/wordlists';
+import { ptBRLocale } from '../src/locales/pt-BR';
+import { ptPTLocale } from '../src/locales/pt-PT';
+import { esLocale } from '../src/locales/es';
+import type { LocaleData } from '../src/locales/index';
+
+const LOCALES: Record<string, LocaleData> = {
+  'pt-BR': ptBRLocale,
+  'pt-PT': ptPTLocale,
+  'es': esLocale,
+};
 
 let errors = 0;
 
@@ -34,50 +43,53 @@ function findCrossListDuplicates(
   }
 }
 
-function validateAbbreviations(): void {
-  const abbrevKeys = Object.keys(ABBREVIATION_MAP);
-
-  // Check if abbreviation expands to something in HARD_BLOCKED or CONTEXT_SENSITIVE
+function validateAbbreviations(localeName: string, locale: LocaleData): void {
+  const { ABBREVIATION_MAP, HARD_BLOCKED, CONTEXT_SENSITIVE } = locale;
   const hardSet = new Set(HARD_BLOCKED.map(w => w.toLowerCase().trim()));
   const contextSet = new Set(CONTEXT_SENSITIVE.map(w => w.toLowerCase().trim()));
   for (const [abbr, expansion] of Object.entries(ABBREVIATION_MAP)) {
     const inHard = hardSet.has(abbr) || hardSet.has(expansion);
     const inContext = contextSet.has(abbr) || contextSet.has(expansion);
     if (!inHard && !inContext) {
-      console.warn(`  ⚠ Abreviação "${abbr}" → "${expansion}": não está em HARD_BLOCKED nem CONTEXT_SENSITIVE`);
+      console.warn(`  ⚠ [${localeName}] Abreviação "${abbr}" → "${expansion}": não está em HARD_BLOCKED nem CONTEXT_SENSITIVE`);
     }
   }
 
-  // Check for duplicate abbreviation keys
   const seenKeys = new Set<string>();
-  for (const key of abbrevKeys) {
+  for (const key of Object.keys(ABBREVIATION_MAP)) {
     if (seenKeys.has(key)) {
-      console.error(`  ✗ DUPLICATA em ABBREVIATION_MAP: chave "${key}"`);
+      console.error(`  ✗ DUPLICATA em [${localeName}] ABBREVIATION_MAP: chave "${key}"`);
       errors++;
     }
     seenKeys.add(key);
   }
 }
 
-console.log('🔍 Validando wordlists...\n');
+console.log('🔍 Validando wordlists de todos os locales...\n');
 
-console.log(`HARD_BLOCKED: ${HARD_BLOCKED.length} termos`);
-findDuplicates('HARD_BLOCKED', HARD_BLOCKED);
+for (const [localeName, locale] of Object.entries(LOCALES)) {
+  console.log(`\n─── Locale: ${localeName} ───`);
+  console.log(`  HARD_BLOCKED: ${locale.HARD_BLOCKED.length} termos`);
+  findDuplicates(`[${localeName}] HARD_BLOCKED`, locale.HARD_BLOCKED);
 
-console.log(`CONTEXT_SENSITIVE: ${CONTEXT_SENSITIVE.length} termos`);
-findDuplicates('CONTEXT_SENSITIVE', CONTEXT_SENSITIVE);
+  console.log(`  CONTEXT_SENSITIVE: ${locale.CONTEXT_SENSITIVE.length} termos`);
+  findDuplicates(`[${localeName}] CONTEXT_SENSITIVE`, locale.CONTEXT_SENSITIVE);
 
-console.log(`ABBREVIATION_MAP: ${Object.keys(ABBREVIATION_MAP).length} mapeamentos`);
-validateAbbreviations();
+  console.log(`  ABBREVIATION_MAP: ${Object.keys(locale.ABBREVIATION_MAP).length} mapeamentos`);
+  validateAbbreviations(localeName, locale);
 
-console.log('\nVerificando duplicatas cruzadas...');
-findCrossListDuplicates('HARD_BLOCKED', HARD_BLOCKED, 'CONTEXT_SENSITIVE', CONTEXT_SENSITIVE);
+  console.log(`  Verificando duplicatas cruzadas (HARD_BLOCKED ↔ CONTEXT_SENSITIVE)...`);
+  findCrossListDuplicates(
+    `[${localeName}] HARD_BLOCKED`, locale.HARD_BLOCKED,
+    `[${localeName}] CONTEXT_SENSITIVE`, locale.CONTEXT_SENSITIVE,
+  );
+}
 
 console.log('');
 if (errors > 0) {
   console.error(`❌ ${errors} problema(s) encontrado(s)!`);
   process.exit(1);
 } else {
-  console.log('✅ Nenhuma duplicata encontrada!');
+  console.log('✅ Nenhuma duplicata encontrada em nenhum locale!');
   process.exit(0);
 }

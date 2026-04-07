@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc:*)",
+      "Bash(npx jest:*)",
+      "Bash(npx ts-node:*)"
+    ]
+  }
+}

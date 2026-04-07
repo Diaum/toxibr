@@ -1,4 +1,5 @@
 import { filterContent, normalize, createFilter } from '../src/filter';
+import { ptBRLocale, ptPTLocale, esLocale } from '../src/locales/index';
 
 // ─── Normalization ───────────────────────────────────────────────────────────
 
@@ -654,5 +655,241 @@ describe('performance', () => {
     for (let i = 0; i < 100; i++) filterContent(longText);
     const elapsed = Date.now() - start;
     expect(elapsed).toBeLessThan(1000);
+  });
+});
+
+// ─── Multi-locale support ─────────────────────────────────────────────────────
+
+describe('locale: pt-PT', () => {
+  const filter = createFilter({ locale: 'pt-PT' });
+
+  describe('PT-PT specific slurs (hard-blocked)', () => {
+    const ptPTSlurs = ['paneleiro', 'maricas', 'cabrao', 'cona', 'picha'];
+    ptPTSlurs.forEach(word => {
+      it(`blocks "${word}"`, () => {
+        const result = filter(`mensagem com ${word} aqui`);
+        expect(result.allowed).toBe(false);
+        if (!result.allowed) expect(result.reason).toBe('hard_block');
+      });
+    });
+  });
+
+  describe('PT-PT context-sensitive insults', () => {
+    it('blocks "parvo" when directed', () => {
+      const result = filter('tu és um parvo');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('directed_insult');
+    });
+
+    it('allows "parvo" in self-expression', () => {
+      expect(filter('sou um parvo às vezes').allowed).toBe(true);
+    });
+
+    it('blocks "tolo" when directed', () => {
+      const result = filter('és um tolo');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('directed_insult');
+    });
+
+    it('allows "tolo" in self-expression', () => {
+      expect(filter('eu sinto-me tolo').allowed).toBe(true);
+    });
+
+    it('recognizes "sinto-me" as self-expression (PT-PT reflexive, normalized to "sintome")', () => {
+      expect(filter('sinto-me um idiota').allowed).toBe(true);
+    });
+  });
+
+  describe('PT-PT does NOT inherit BR-specific slurs', () => {
+    // "rapariga" means "girl" in PT-PT — must NOT be blocked
+    it('allows "rapariga" (means girl in PT-PT)', () => {
+      expect(filter('a rapariga foi ao mercado').allowed).toBe(true);
+    });
+
+    // "puto" means "boy/kid" in PT-PT — must NOT be blocked
+    it('allows "puto" (means boy/kid in PT-PT)', () => {
+      expect(filter('o puto foi brincar').allowed).toBe(true);
+    });
+  });
+
+  describe('PT-PT directed patterns', () => {
+    it('blocks "cala-te" pattern', () => {
+      const result = filter('cala-te idiota');
+      expect(result.allowed).toBe(false);
+    });
+
+    it('blocks "vai-te" pattern', () => {
+      const result = filter('vai-te embora burro');
+      expect(result.allowed).toBe(false);
+    });
+  });
+
+  describe('PT-PT abbreviations', () => {
+    it('expands "fdp" and blocks', () => {
+      const result = filter('seu fdp');
+      expect(result.allowed).toBe(false);
+    });
+  });
+});
+
+describe('locale: es', () => {
+  const filter = createFilter({ locale: 'es' });
+
+  describe('ES specific slurs (hard-blocked)', () => {
+    const esSlurs = ['gilipollas', 'maricon', 'bollera', 'tortillera', 'subnormal'];
+    esSlurs.forEach(word => {
+      it(`blocks "${word}"`, () => {
+        const result = filter(`mensaje con ${word} aqui`);
+        expect(result.allowed).toBe(false);
+        if (!result.allowed) expect(result.reason).toBe('hard_block');
+      });
+    });
+  });
+
+  describe('ES context-sensitive words (exclamaciones comunes)', () => {
+    it('allows "joder" as standalone exclamation', () => {
+      expect(filter('¡joder! que dia tan duro').allowed).toBe(true);
+    });
+
+    it('allows "mierda" as standalone exclamation', () => {
+      expect(filter('qué mierda de día').allowed).toBe(true);
+    });
+
+    it('blocks "mierda" when directed', () => {
+      const result = filter('eres una mierda tío');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('directed_insult');
+    });
+
+    it('blocks "idiota" when directed', () => {
+      const result = filter('eres un idiota');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('directed_insult');
+    });
+
+    it('allows "idiota" in self-expression', () => {
+      expect(filter('me siento un idiota').allowed).toBe(true);
+    });
+
+    it('blocks "estupido" when directed', () => {
+      const result = filter('tu eres un estupido');
+      expect(result.allowed).toBe(false);
+    });
+
+    it('allows "estupido" in self-expression', () => {
+      expect(filter('soy un estupido').allowed).toBe(true);
+    });
+  });
+
+  describe('ES directed patterns', () => {
+    it('recognizes "callate" as directed', () => {
+      const result = filter('callate idiota');
+      expect(result.allowed).toBe(false);
+    });
+
+    it('recognizes "vete" as directed', () => {
+      const result = filter('vete de aqui estupido');
+      expect(result.allowed).toBe(false);
+    });
+  });
+
+  describe('ES abbreviations', () => {
+    it('expands "hdp" and blocks', () => {
+      const result = filter('eres un hdp');
+      expect(result.allowed).toBe(false);
+    });
+
+    it('expands "ptm" and blocks', () => {
+      const result = filter('ptm que rabia');
+      expect(result.allowed).toBe(false);
+    });
+  });
+});
+
+describe('multi-locale: pt-BR + pt-PT', () => {
+  const filter = createFilter({ locale: ['pt-BR', 'pt-PT'] });
+
+  it('blocks PT-BR specific slurs', () => {
+    expect(filter('viado').allowed).toBe(false);
+  });
+
+  it('blocks PT-PT specific slurs', () => {
+    expect(filter('paneleiro').allowed).toBe(false);
+  });
+
+  it('blocks PT-BR context words when directed', () => {
+    const result = filter('você é um lixo');
+    expect(result.allowed).toBe(false);
+  });
+
+  it('blocks PT-PT context words when directed', () => {
+    const result = filter('és um parvo');
+    expect(result.allowed).toBe(false);
+  });
+
+  it('recognizes both PT-BR and PT-PT self-expression patterns', () => {
+    expect(filter('me sinto um idiota').allowed).toBe(true);
+    expect(filter('sinto-me um parvo').allowed).toBe(true);
+  });
+});
+
+describe('multi-locale: pt-BR + es', () => {
+  const filter = createFilter({ locale: ['pt-BR', 'es'] });
+
+  it('blocks PT-BR slur', () => {
+    expect(filter('viado').allowed).toBe(false);
+  });
+
+  it('blocks ES slur', () => {
+    expect(filter('gilipollas').allowed).toBe(false);
+  });
+
+  it('blocks ES directed insult', () => {
+    expect(filter('eres un idiota').allowed).toBe(false);
+  });
+
+  it('blocks PT-BR directed insult', () => {
+    expect(filter('você é um lixo').allowed).toBe(false);
+  });
+});
+
+describe('tree-shakeable locale API (locales: [data])', () => {
+  it('creates pt-BR filter from locale object', () => {
+    const filter = createFilter({ locales: [ptBRLocale] });
+    expect(filter('viado').allowed).toBe(false);
+    expect(filter('oi tudo bem').allowed).toBe(true);
+  });
+
+  it('creates pt-PT filter from locale object', () => {
+    const filter = createFilter({ locales: [ptPTLocale] });
+    expect(filter('paneleiro').allowed).toBe(false);
+    // "rapariga" should NOT be blocked (means girl in PT-PT)
+    expect(filter('a rapariga foi ao mercado').allowed).toBe(true);
+  });
+
+  it('creates es filter from locale object', () => {
+    const filter = createFilter({ locales: [esLocale] });
+    expect(filter('gilipollas').allowed).toBe(false);
+    expect(filter('hola que tal').allowed).toBe(true);
+  });
+
+  it('merges two locales from objects', () => {
+    const filter = createFilter({ locales: [ptBRLocale, ptPTLocale] });
+    expect(filter('viado').allowed).toBe(false);
+    expect(filter('paneleiro').allowed).toBe(false);
+  });
+});
+
+describe('locale: default is still pt-BR', () => {
+  it('createFilter() with no options defaults to pt-BR', () => {
+    const filter = createFilter();
+    expect(filter('viado').allowed).toBe(false);
+    expect(filter('buceta').allowed).toBe(false);
+    // pt-PT specific slurs are NOT blocked by default pt-BR filter (by design)
+    expect(filter('paneleiro').allowed).toBe(true);
+  });
+
+  it('invalid locale throws a helpful error', () => {
+    expect(() => createFilter({ locale: 'fr' as any })).toThrow(/unknown locale/i);
   });
 });
