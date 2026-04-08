@@ -196,7 +196,18 @@ export function normalize(input: string): string {
   t = t.replace(/(\w)[.\-](\w)/g, '$1$2');
 
   // 9. Remove spaces between isolated single chars (p u t a → puta)
-  t = t.replace(/\b(\w)\s(\w)\s(\w)/g, (_, a, b, c) => a + b + c);
+
+  const blocklist = new Set([...HARD_BLOCKED]);
+
+  t = t.replace(/\b(?:[a-z]\s*){3,}\b/gi, (match) => {
+  const normalizada = match.replace(/\s+/g, "").toLowerCase();
+
+    if (blocklist.has(normalizada)) {
+      return normalizada; // ou "***", ou bloquear como quiser
+    }
+
+    return match;
+  });
 
   // 10. Expand known abbreviations (strip punctuation from each word before lookup)
   const words = t.split(/\s+/);
