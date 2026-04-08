@@ -200,7 +200,7 @@ export function normalize(input: string): string {
   const blocklist = new Set([...HARD_BLOCKED]);
 
   t = t.replace(/\b(?:[a-z]\s*){3,}\b/gi, (match) => {
-  const normalizada = match.replace(/\s+/g, "").toLowerCase();
+    const normalizada = match.replace(/\s+/g, '').toLowerCase();
 
     if (blocklist.has(normalizada)) {
       return normalizada; // ou "***", ou bloquear como quiser
@@ -316,10 +316,10 @@ const FUZZY_ALLOWLIST = new Set([
   // Brazilian proper names — fuzzy false positives
   'patricia', // → pitrica (dist 2)
   'adriano', // → ariano (dist 1)
-  'ariane',  // → ariano (dist 1)
-  'nadia',   // → vadia  (dist 1)
-  'nunes',   // → nudes  (dist 1)
-  'porto',   // → porno  (dist 1)
+  'ariane', // → ariano (dist 1)
+  'nadia', // → vadia  (dist 1)
+  'nunes', // → nudes  (dist 1)
+  'porto', // → porno  (dist 1)
 ]);
 
 // ─── PT-BR Stemmer (RSLP simplificado) ──────────────────────────────────────
