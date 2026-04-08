@@ -313,6 +313,13 @@ const FUZZY_ALLOWLIST = new Set([
   'pontas', // → phnta
   'bloqueie', // → boquete
   'roda', // prefix matches rodada
+  // Brazilian proper names — fuzzy false positives
+  'patricia', // → pitrica (dist 2)
+  'adriano', // → ariano (dist 1)
+  'ariane',  // → ariano (dist 1)
+  'nadia',   // → vadia  (dist 1)
+  'nunes',   // → nudes  (dist 1)
+  'porto',   // → porno  (dist 1)
 ]);
 
 // ─── PT-BR Stemmer (RSLP simplificado) ──────────────────────────────────────
