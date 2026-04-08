@@ -1,5 +1,6 @@
 export type FilterReason =
   | 'hard_block'
+  | 'stem_match'
   | 'directed_insult'
   | 'fuzzy_match'
   | 'suspicious_content'
@@ -26,6 +27,24 @@ export interface CensorResult {
 /** Severity configuration per FilterReason. Default: all 'block'. */
 export type SeverityConfig = Partial<Record<FilterReason, Severity>>;
 
+/** Blocked result passed to the onBlock callback. */
+export type BlockedResult = {
+  allowed: false;
+  reason: FilterReason;
+  matched: string;
+  severity: Severity;
+};
+
+/** Accumulated filtering statistics. */
+export interface FilterStats {
+  total: number;
+  allowed: number;
+  blocked: number;
+  byReason: Partial<Record<FilterReason, number>>;
+  topMatched: Array<{ word: string; count: number }>;
+  avgTimeMs: number;
+}
+
 export interface ToxiBROptions {
   /** Additional words to hard-block (merged with built-in list). */
   extraBlockedWords?: string[];
@@ -47,4 +66,8 @@ export interface ToxiBROptions {
   censorLinks?: boolean;
   /** Severity level per filter reason. Default: all 'block'. */
   severity?: SeverityConfig;
+  /** Callback invoked every time a message is blocked. */
+  onBlock?: (result: BlockedResult) => void;
+  /** Enable stats tracking. Default: false */
+  trackStats?: boolean;
 }

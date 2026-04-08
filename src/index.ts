@@ -9,10 +9,14 @@ export {
   censorContent,
   createCensor,
   normalize,
+  stem,
 } from './filter';
+export type { ToxiBRFilter } from './filter';
 export type {
   FilterResult,
   FilterReason,
+  FilterStats,
+  BlockedResult,
   CensorResult,
   ToxiBROptions,
   Severity,

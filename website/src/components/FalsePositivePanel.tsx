@@ -51,53 +51,39 @@ export default function FalsePositivePanel({
 
   const handleSubmit = () => {
     const sections: string[] = [
-      '## Relatorio de moderacao — ToxiBR Playground',
+      '## Report de moderacao — ToxiBR Playground',
       '',
-      `**Total de itens:** ${entries.length}`,
+      '> **IMPORTANTE:** Este report foi gerado automaticamente pelo Playground.',
+      '> Nem todo report e valido — o revisor deve analisar cada item e decidir',
+      '> se a acao e realmente necessaria. Um "falso positivo" reportado pode',
+      '> ser um bloqueio legitimo, e uma "palavra nao capturada" pode ser',
+      '> inocente no contexto geral.',
       '',
     ];
 
     if (fpEntries.length > 0) {
-      sections.push('### Falsos positivos (palavras bloqueadas que NAO deveriam ser)');
-      sections.push('');
-      sections.push(
-        'Essas palavras foram bloqueadas pelo filtro mas sao inocentes no contexto em que foram usadas.'
-      );
-      sections.push('');
       for (const e of fpEntries) {
         const ctx = extractContext(e.word, e.context);
-        sections.push(`**Palavra:** \`${e.word}\``);
-        sections.push(`**Detectada como:** \`${e.matched}\` (${e.reason})`);
-        sections.push(`**Contexto:** ${ctx}`);
+        sections.push(`### Falso positivo: \`${e.word}\``);
+        sections.push('');
+        sections.push(`- **Detectada como:** \`${e.matched}\` (${e.reason})`);
+        sections.push(`- **Contexto:** ${ctx}`);
         sections.push('');
       }
-      sections.push('');
-      sections.push(
-        '> **Acao esperada:** Revisar se a palavra deve ser adicionada na FUZZY_ALLOWLIST ou removida da wordlist.'
-      );
-      sections.push('');
     }
 
     if (missedEntries.length > 0) {
-      sections.push('### Palavras/frases NAO capturadas (deveriam ser bloqueadas)');
-      sections.push('');
-      sections.push('Essas palavras ou frases passaram pelo filtro mas contem conteudo toxico.');
-      sections.push('');
       for (const e of missedEntries) {
         const ctx = extractContext(e.word, e.context);
-        sections.push(`**Palavra/frase:** \`${e.word}\``);
-        sections.push(`**Contexto:** ${ctx}`);
+        sections.push(`### Nao capturada: \`${e.word}\``);
+        sections.push('');
+        sections.push(`- **Contexto:** ${ctx}`);
         sections.push('');
       }
-      sections.push('');
-      sections.push(
-        '> **Acao esperada:** Avaliar se a palavra/frase deve ser adicionada em HARD_BLOCKED, CONTEXT_SENSITIVE ou como frase composta.'
-      );
-      sections.push('');
     }
 
     sections.push('---');
-    sections.push('*Enviado pelo Playground do site ToxiBR*');
+    sections.push('*Enviado automaticamente pelo Playground — https://toxibr.vercel.app/*');
 
     const hasFP = fpEntries.length > 0;
     const hasMissed = missedEntries.length > 0;

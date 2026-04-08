@@ -13,7 +13,14 @@ import {
   CONTEXT_SENSITIVE_EMOJIS,
   WHITELIST,
 } from './wordlists';
-import type { FilterResult, CensorResult, ToxiBROptions, FilterReason, Severity } from './types';
+import type {
+  FilterResult,
+  FilterStats,
+  CensorResult,
+  ToxiBROptions,
+  FilterReason,
+  Severity,
+} from './types';
 
 // ─── Homoglyph map (Cyrillic + Latin Extended → ASCII) ───────────────────────
 
@@ -120,6 +127,24 @@ const HOMOGLYPHS: Record<string, string> = {
   '\u029C': 'h', // ʜ (small capital H)
   '\u029F': 'l', // ʟ (small capital L)
   '\u02A0': 'q', // ʠ (q with hook)
+
+  // Currency & typographic symbols abused as letter substitutes
+  '\u20AC': 'e', // € (euro sign → e)
+  '\u00A3': 'l', // £ (pound sign → l)
+  '\u00A2': 'c', // ¢ (cent sign → c)
+  '\u00A5': 'y', // ¥ (yen sign → y)
+
+  // Superscript digits → ASCII digits (leetspeak will then convert them)
+  '\u00B2': '2', // ² → 2
+  '\u00B3': '3', // ³ → 3
+  '\u00B9': '1', // ¹ → 1
+  '\u2070': '0', // ⁰ → 0
+  '\u2074': '4', // ⁴ → 4
+  '\u2075': '5', // ⁵ → 5
+  '\u2076': '6', // ⁶ → 6
+  '\u2077': '7', // ⁷ → 7
+  '\u2078': '8', // ⁸ → 8
+  '\u2079': '9', // ⁹ → 9
 };
 
 // ─── Leetspeak map ───────────────────────────────────────────────────────────
@@ -172,7 +197,18 @@ export function normalize(input: string): string {
   t = t.replace(/(\w)[.\-](\w)/g, '$1$2');
 
   // 9. Remove spaces between isolated single chars (p u t a → puta)
-  t = t.replace(/\b(\w)\s(\w)\s(\w)/g, (_, a, b, c) => a + b + c);
+
+  const blocklist = new Set([...HARD_BLOCKED]);
+
+  t = t.replace(/\b(?:[a-z]\s*){3,}\b/gi, (match) => {
+    const normalizada = match.replace(/\s+/g, '').toLowerCase();
+
+    if (blocklist.has(normalizada)) {
+      return normalizada; // ou "***", ou bloquear como quiser
+    }
+
+    return match;
+  });
 
   // 10. Expand known abbreviations (strip punctuation from each word before lookup)
   const words = t.split(/\s+/);
@@ -278,6 +314,124 @@ const FUZZY_ALLOWLIST = new Set([
   'pontas', // → phnta
   'bloqueie', // → boquete
   'roda', // prefix matches rodada
+  // Brazilian proper names — fuzzy false positives
+  'patricia', // → pitrica (dist 2)
+  'adriano', // → ariano (dist 1)
+  'ariane', // → ariano (dist 1)
+  'nadia', // → vadia  (dist 1)
+  'nunes', // → nudes  (dist 1)
+  'porto', // → porno  (dist 1)
+]);
+
+// ─── PT-BR Stemmer (RSLP simplificado) ──────────────────────────────────────
+
+// Suffixes ordered longest-first so greedy match works correctly.
+// Each group: verbal conjugation, then nominal.
+const STEM_SUFFIXES = [
+  // Verbal — gerund
+  'ando',
+  'endo',
+  'indo',
+  // Verbal — past / conditional / subjunctive (longer first)
+  'ariam',
+  'eriam',
+  'iriam',
+  'aram',
+  'eram',
+  'iram',
+  'avam',
+  'iam',
+  'aria',
+  'eria',
+  'iria',
+  'asse',
+  'esse',
+  'isse',
+  'ase',
+  'ese',
+  'ise', // normalized forms (ss → s after char collapse)
+  'aram',
+  'eram',
+  'iram',
+  'aram',
+  // Verbal — simple past / present
+  'ou',
+  'ei',
+  'eu',
+  'ar',
+  'er',
+  'ir',
+  // Nominal — augmentative / diminutive / agent
+  'inho',
+  'inha',
+  'inhos',
+  'inhas',
+  'eiro',
+  'eira',
+  'eiros',
+  'eiras',
+  'udo',
+  'uda',
+  'udos',
+  'udas',
+  'oso',
+  'osa',
+  'osos',
+  'osas',
+  'ado',
+  'ada',
+  'ados',
+  'adas',
+  'ido',
+  'ida',
+  'idos',
+  'idas',
+  'ona',
+  'onas',
+  'ao',
+  'oes',
+];
+
+/** Minimum stem length — stems shorter than this are not produced. */
+const MIN_STEM_LEN = 3;
+
+/**
+ * Lightweight PT-BR stemmer: strips the first matching suffix and returns the
+ * radical. Returns the original word when no suffix matches or the stem would
+ * be shorter than MIN_STEM_LEN.
+ */
+export function stem(word: string): string {
+  for (const suf of STEM_SUFFIXES) {
+    if (word.length > suf.length + MIN_STEM_LEN - 1 && word.endsWith(suf)) {
+      return word.slice(0, -suf.length);
+    }
+  }
+  return word;
+}
+
+/**
+ * Stems that are known false-positives — innocent words whose stem collides
+ * with a blocked word's stem. Checked against the *message word's* stem.
+ */
+const STEM_ALLOWLIST = new Set([
+  // "computador/computar" → stem "comput" — innocent
+  'comput',
+  // "método/meter" collision
+  'met',
+  // "comunidade/comer" collision
+  'com',
+  // "estourar/estouro" — stem "estour"
+  'estour',
+  // "jogou/jogar" — innocent gaming context (already context-sensitive)
+  'jog',
+  // "chorando/chorado" — innocent
+  'chor',
+  // "mamãe" — stem "mam"
+  'mam',
+  // "batedor/bater" — stem "bat"
+  'bat',
+  // "tocada/tocar" — stem "toc"
+  'toc',
 ]);
 
 // Words explicitly whitelisted (never blocked, not even by fuzzy/prefix).
@@ -310,7 +464,14 @@ const LINK_REPLACE_REGEX =
 
 // ─── Create filter instance ──────────────────────────────────────────────────
 
-export function createFilter(options: ToxiBROptions = {}) {
+export interface ToxiBRFilter {
+  (text: string): FilterResult;
+  getStats: () => FilterStats;
+  resetStats: () => void;
+  exportStats: () => string;
+}
+
+export function createFilter(options: ToxiBROptions = {}): ToxiBRFilter {
   const {
     extraBlockedWords = [],
     extraContextWords = [],
@@ -319,7 +480,17 @@ export function createFilter(options: ToxiBROptions = {}) {
     blockDigitsOnly = true,
     blockEmojis = true,
     severity: severityConfig = {},
+    onBlock,
+    trackStats = false,
   } = options;
+
+  // ─── Stats state (only allocated when trackStats is true) ───────────────
+  let statsTotal = 0;
+  let statsAllowed = 0;
+  let statsBlocked = 0;
+  let statsByReason: Partial<Record<FilterReason, number>> = {};
+  let statsMatchedCounts: Record<string, number> = {};
+  let statsTotalTimeMs = 0;
 
   function getSeverity(reason: FilterReason): Severity {
     return severityConfig[reason] ?? 'block';
@@ -334,6 +505,15 @@ export function createFilter(options: ToxiBROptions = {}) {
 
   const hardBlockedRegexes = buildRegexes(allBlocked);
   const contextSensitiveRegexes = buildRegexes(allContext);
+
+  // Pre-compute blocked stems (single words only, stem length >= MIN_STEM_LEN)
+  const blockedStems = new Set<string>();
+  for (const w of allBlocked) {
+    const n = normalize(w);
+    if (n.includes(' ')) continue;
+    const s = stem(n);
+    if (s.length >= MIN_STEM_LEN) blockedStems.add(s);
+  }
 
   // Pre-normalized wordlist for fuzzy matching, bucketed by length (deduplicated)
   const fuzzyByLength = new Map<number, string[]>();
@@ -352,7 +532,61 @@ export function createFilter(options: ToxiBROptions = {}) {
     if (n.length >= 5) prefixWords.push(n);
   }
 
-  return function filterContent(text: string): FilterResult {
+  function filterContent(text: string): FilterResult {
+    const start = trackStats ? performance.now() : 0;
+    const result = _filter(text);
+
+    if (trackStats) {
+      const elapsed = performance.now() - start;
+      statsTotal++;
+      statsTotalTimeMs += elapsed;
+      if (result.allowed) {
+        statsAllowed++;
+      } else {
+        statsBlocked++;
+        statsByReason[result.reason] = (statsByReason[result.reason] ?? 0) + 1;
+        statsMatchedCounts[result.matched] = (statsMatchedCounts[result.matched] ?? 0) + 1;
+      }
+    }
+
+    if (!result.allowed && onBlock) {
+      onBlock(result);
+    }
+
+    return result;
+  }
+
+  filterContent.getStats = (): FilterStats => {
+    const topMatched = Object.entries(statsMatchedCounts)
+      .map(([word, count]) => ({ word, count }))
+      .sort((a, b) => b.count - a.count);
+
+    return {
+      total: statsTotal,
+      allowed: statsAllowed,
+      blocked: statsBlocked,
+      byReason: { ...statsByReason },
+      topMatched,
+      avgTimeMs: statsTotal > 0 ? statsTotalTimeMs / statsTotal : 0,
+    };
+  };
+
+  filterContent.resetStats = (): void => {
+    statsTotal = 0;
+    statsAllowed = 0;
+    statsBlocked = 0;
+    statsByReason = {};
+    statsMatchedCounts = {};
+    statsTotalTimeMs = 0;
+  };
+
+  filterContent.exportStats = (): string => {
+    return JSON.stringify(filterContent.getStats());
+  };
+
+  return filterContent;
+
+  function _filter(text: string): FilterResult {
     const normalized = normalize(text);
 
     // Layer 0: Censorship bypass detection
@@ -370,6 +604,21 @@ export function createFilter(options: ToxiBROptions = {}) {
       _emojiSepRe.test(text)
     ) {
       return makeResult('hard_block', 'censorship bypass');
+    }
+
+    // Layer 0e: Words with 3+ digits mixed with letters — obfuscation bypass
+    // (e.g. v14d0, p0rn0gr4f14, c4r4lh0). Pure digit sequences and known
+    // technical patterns (like "h2o2", short codes) are excluded.
+    {
+      const words = text.split(/\s+/);
+      for (const w of words) {
+        // Must contain at least one letter and at least 3 digits
+        if (!/[a-zA-Z]/.test(w)) continue;
+        const digitCount = (w.match(/\d/g) || []).length;
+        if (digitCount >= 3) {
+          return makeResult('hard_block', 'censorship bypass');
+        }
+      }
     }
 
     // Layer 0z: Pre-normalization exact matches (terms that break after leetspeak/normalization)
@@ -439,6 +688,22 @@ export function createFilter(options: ToxiBROptions = {}) {
     for (const { word, regex } of hardBlockedRegexes) {
       if (regex.test(normalized)) {
         return makeResult('hard_block', word);
+      }
+    }
+
+    // Layer 1a: Stem match — catches verb conjugations automatically
+    {
+      const messageWords = normalized.split(/\s+/);
+      for (const msgWord of messageWords) {
+        if (msgWord.length < 4) continue;
+        const wordStem = stem(msgWord);
+        if (
+          wordStem.length >= MIN_STEM_LEN &&
+          !STEM_ALLOWLIST.has(wordStem) &&
+          blockedStems.has(wordStem)
+        ) {
+          return makeResult('stem_match', msgWord);
+        }
       }
     }
 
@@ -554,7 +819,7 @@ export function createFilter(options: ToxiBROptions = {}) {
     }
 
     return { allowed: true };
-  };
+  }
 }
 
 // ─── Censor function ────────────────────────────────────────────────────────

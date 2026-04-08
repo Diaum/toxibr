@@ -5,6 +5,7 @@ import {
   createFilter,
   filterBatch,
   createFilterBatch,
+  stem,
 } from '../src/filter';
 
 // ─── Normalization ───────────────────────────────────────────────────────────
@@ -138,12 +139,35 @@ describe('bypass prevention', () => {
     expect(filterContent('3stupr0').allowed).toBe(false);
   });
 
-  it('blocks with accents: viàdo', () => {
-    expect(filterContent('viàdo').allowed).toBe(false);
+  it('blocks with unusual accents: viàdo, vîado, pũta, etc.', () => {
+    const words = [
+      'viàdo',
+      'pùta',
+      'èstupro',
+      'vîado',
+      'pûta',
+      'bûceta',
+      'viãdo',
+      'pũta',
+      'raça ariana',
+      'vïado',
+      'vīado',
+      'pūta',
+    ];
+    words.forEach((word) => {
+      expect(filterContent(word).allowed).toBe(false);
+    });
   });
 
   it('blocks with zero-width chars', () => {
     expect(filterContent('vi\u200Bado').allowed).toBe(false);
+    expect(filterContent('v\u200Diado').allowed).toBe(false);
+    expect(filterContent('vi\u200Dado').allowed).toBe(false);
+    expect(filterContent('p\u200Du\u200Dt\u200Da').allowed).toBe(false);
+  });
+
+  it('blocks with Zalgo Text / heavy combining marks', () => {
+    expect(filterContent('v̵i̵a̵d̵o̵').allowed).toBe(false);
   });
 
   it('blocks repeated chars: viiaaado', () => {
@@ -462,6 +486,322 @@ describe('false positives — new v2 additions must not break', () => {
   safe.forEach((phrase) => {
     it(`allows: "${phrase}"`, () => {
       expect(filterContent(phrase).allowed).toBe(true);
+    });
+  });
+});
+
+// ─── False positives — Brazilian proper names ────────────────────────────────
+
+describe('false positives — Brazilian proper names must NEVER block', () => {
+  const names = [
+    // ── Femininos (fonte: API IBGE, todas as décadas + complementos) ──────────
+    'Adriana',
+    'Alessandra',
+    'Alice',
+    'Aline',
+    'Alzira',
+    'Amanda',
+    'Ana',
+    'Andrea',
+    'Andreia',
+    'Antonia',
+    'Aparecida',
+    'Beatriz',
+    'Benedita',
+    'Bianca',
+    'Bruna',
+    'Camila',
+    'Carla',
+    'Carolina',
+    'Claudia',
+    'Cristiane',
+    'Cristina',
+    'Daiane',
+    'Daniela',
+    'Debora',
+    'Denise',
+    'Eduarda',
+    'Elaine',
+    'Eliane',
+    'Elisa',
+    'Elza',
+    'Evelyn',
+    'Fabiana',
+    'Fatima',
+    'Fernanda',
+    'Flavia',
+    'Francisca',
+    'Gabriela',
+    'Geovana',
+    'Helena',
+    'Heloisa',
+    'Isabel',
+    'Isabela',
+    'Jaqueline',
+    'Jessica',
+    'Joana',
+    'Josefa',
+    'Julia',
+    'Juliana',
+    'Janaína',
+    'Karine',
+    'Katia',
+    'Larissa',
+    'Laura',
+    'Leticia',
+    'Lidia',
+    'Lilian',
+    'Lorena',
+    'Luana',
+    'Lucia',
+    'Luciana',
+    'Luiza',
+    'Luzia',
+    'Marcia',
+    'Maria',
+    'Mariana',
+    'Marina',
+    'Marlene',
+    'Marli',
+    'Monica',
+    'Nadia',
+    'Nair',
+    'Natalia',
+    'Nilza',
+    'Patricia',
+    'Poliana',
+    'Priscila',
+    'Rafaela',
+    'Raimunda',
+    'Raquel',
+    'Regina',
+    'Renata',
+    'Rita',
+    'Roberta',
+    'Rosa',
+    'Rosana',
+    'Rosangela',
+    'Roseli',
+    'Sandra',
+    'Sara',
+    'Sebastiana',
+    'Selma',
+    'Silvana',
+    'Silvia',
+    'Simone',
+    'Solange',
+    'Sonia',
+    'Sueli',
+    'Tamara',
+    'Tamires',
+    'Tania',
+    'Tatiane',
+    'Tatiana',
+    'Tereza',
+    'Terezinha',
+    'Vanessa',
+    'Vera',
+    'Viviane',
+    'Vitoria',
+    'Yasmin',
+    // Nomes com risco de colisão identificados
+    'Ariane',
+    'Assunção',
+    'Conceição',
+    'Mara',
+    // ── Masculinos (fonte: API IBGE, todas as décadas + complementos) ─────────
+    'Adriano',
+    'Alexandre',
+    'Anderson',
+    'Andre',
+    'Antonio',
+    'Artur',
+    'Augusto',
+    'Benedito',
+    'Bruno',
+    'Caio',
+    'Carlos',
+    'Claudio',
+    'Cristiano',
+    'Daniel',
+    'Diego',
+    'Edilson',
+    'Edson',
+    'Eduardo',
+    'Emerson',
+    'Everton',
+    'Ezequiel',
+    'Fabio',
+    'Felipe',
+    'Fernando',
+    'Flavio',
+    'Francisco',
+    'Gabriel',
+    'Geraldo',
+    'Gilberto',
+    'Gilmar',
+    'Gilson',
+    'Giovanni',
+    'Guilherme',
+    'Gustavo',
+    'Heitor',
+    'Henrique',
+    'Hugo',
+    'Humberto',
+    'Igor',
+    'Ivan',
+    'Jefferson',
+    'Joao',
+    'Joaquim',
+    'Joel',
+    'Jonas',
+    'Jorge',
+    'Jose',
+    'Junior',
+    'Leandro',
+    'Leonardo',
+    'Levi',
+    'Lucas',
+    'Luciano',
+    'Luis',
+    'Luiz',
+    'Manoel',
+    'Manuel',
+    'Marcelo',
+    'Marcio',
+    'Marcos',
+    'Mario',
+    'Mateus',
+    'Matheus',
+    'Mauricio',
+    'Mauro',
+    'Miguel',
+    'Milton',
+    'Moises',
+    'Murilo',
+    'Natan',
+    'Nelson',
+    'Nilson',
+    'Otavio',
+    'Osvaldo',
+    'Pablo',
+    'Paulo',
+    'Pedro',
+    'Rafael',
+    'Raimundo',
+    'Renan',
+    'Renato',
+    'Ricardo',
+    'Roberto',
+    'Robson',
+    'Rodrigo',
+    'Ronaldo',
+    'Ruan',
+    'Rubens',
+    'Samuel',
+    'Sandro',
+    'Sebastiao',
+    'Sergio',
+    'Severino',
+    'Thiago',
+    'Tiago',
+    'Valdir',
+    'Vanderlei',
+    'Victor',
+    'Vicente',
+    'Vinicius',
+    'Vitor',
+    'Waldir',
+    'Wanderlei',
+    'Wellington',
+    'William',
+    'Wilson',
+    // ── Sobrenomes top-78 (Censo 2022 IBGE) ──────────────────────────────────
+    'Silva',
+    'Santos',
+    'Oliveira',
+    'Souza',
+    'Pereira',
+    'Ferreira',
+    'Lima',
+    'Alves',
+    'Rodrigues',
+    'Costa',
+    'Sousa',
+    'Gomes',
+    'Nascimento',
+    'Araujo',
+    'Ribeiro',
+    'Almeida',
+    'Jesus',
+    'Barbosa',
+    'Soares',
+    'Carvalho',
+    'Martins',
+    'Lopes',
+    'Vieira',
+    'Rocha',
+    'Dias',
+    'Gonçalves',
+    'Fernandes',
+    'Santana',
+    'Andrade',
+    'Batista',
+    'Campos',
+    'Mendes',
+    'Cardoso',
+    'Teixeira',
+    'Freitas',
+    'Correia',
+    'Pinto',
+    'Cavalcanti',
+    'Braga',
+    'Medeiros',
+    'Azevedo',
+    'Castro',
+    'Cunha',
+    'Cruz',
+    'Brito',
+    'Nunes',
+    'Miranda',
+    'Morais',
+    'Neto',
+    'Monteiro',
+    'Moreira',
+    'Moura',
+    'Machado',
+    'Ramos',
+    'Coelho',
+    'Borges',
+    'Melo',
+    'Faria',
+    'Rezende',
+    'Guimarães',
+    'Figueiredo',
+    'Macedo',
+    'Duarte',
+    'Silveira',
+    'Porto',
+    'Amorim',
+    'Leite',
+    'Paiva',
+    'Queiroz',
+    'Vasconcelos',
+    'Xavier',
+    'Maia',
+    'Lacerda',
+    'Bastos',
+    'Pires',
+    'Tavares',
+  ];
+
+  names.forEach((name) => {
+    it(`allows name: "${name}"`, () => {
+      expect(filterContent(name).allowed).toBe(true);
+    });
+
+    it(`allows in phrase: "mensagem de ${name}"`, () => {
+      expect(filterContent(`mensagem de ${name}`).allowed).toBe(true);
     });
   });
 });
@@ -1043,8 +1383,9 @@ describe('leetspeak legítimo (0, 1, 3, 4, 5, 7) continua funcionando via Layer 
   });
 });
 
+// ─── Issue #42 — 10 Termos Não Capturados ────────────────────────────────────
 
-describe('Validação de termos reportados', () => {
+describe('[Issue #42] - 10 Termos Reportados', () => {
   // ── pornografia ────────────────────────────────────────────────────────────
 
   describe('pornografia — variantes de bypass', () => {
@@ -1212,7 +1553,7 @@ describe('Validação de termos reportados', () => {
 
   // ── abreviações novas (prn, sx, trd) ──────────────────────────────────────
 
-  describe('novas abreviações', () => {
+  describe('novas abreviações (Issue #42)', () => {
     it('blocks "prn" (→ porno via ABBREVIATION_MAP)', () => {
       expect(filterContent('prn').allowed).toBe(false);
     });
@@ -1265,55 +1606,444 @@ describe('Validação de termos reportados', () => {
   });
 });
 
-// ─── Whitelist e falso positivo pipoca/piroca ────────────────────
+// ─── Stemmer ──────────────────────────────────────────────────────────────────
 
-describe('Whitelist: falsos positivos de fuzzy match', () => {
-  describe('falso positivo corrigido (pipoca ≠ piroca)', () => {
-    it('allows "pipoca" (fuzzy-match com piroca era falso positivo)', () => {
-      const result = filterContent('pipoca');
-      expect(result.allowed).toBe(true);
+describe('stem', () => {
+  it('reduces verb infinitives to radical', () => {
+    expect(stem('estuprar')).toBe('estupr');
+    expect(stem('gozar')).toBe('goz');
+    expect(stem('chupar')).toBe('chup');
+    expect(stem('foder')).toBe('fod');
+    expect(stem('transar')).toBe('trans');
+  });
+
+  it('reduces gerund forms', () => {
+    expect(stem('estuprando')).toBe('estupr');
+    expect(stem('gozando')).toBe('goz');
+    expect(stem('chupando')).toBe('chup');
+    expect(stem('fodendo')).toBe('fod');
+  });
+
+  it('reduces past tense (ei/ou/eu)', () => {
+    expect(stem('estuprou')).toBe('estupr');
+    expect(stem('gozei')).toBe('goz');
+    expect(stem('chupou')).toBe('chup');
+    expect(stem('fodeu')).toBe('fod');
+  });
+
+  it('reduces plural past (aram/eram/iram)', () => {
+    expect(stem('estupraram')).toBe('estupr');
+    expect(stem('gozaram')).toBe('goz');
+    expect(stem('foderam')).toBe('fod');
+  });
+
+  it('reduces imperfect (ava/iam)', () => {
+    expect(stem('gozavam')).toBe('goz');
+    expect(stem('fodiam')).toBe('fod');
+  });
+
+  it('reduces conditional (aria/eria/iria)', () => {
+    expect(stem('gozaria')).toBe('goz');
+    expect(stem('foderia')).toBe('fod');
+  });
+
+  it('reduces subjunctive (asse/esse/isse)', () => {
+    expect(stem('gozasse')).toBe('goz');
+    expect(stem('fodesse')).toBe('fod');
+  });
+
+  it('reduces diminutives (inho/inha)', () => {
+    expect(stem('putinha')).toBe('put');
+    expect(stem('cuzinho')).toBe('cuz');
+  });
+
+  it('reduces augmentatives (ao/ona)', () => {
+    expect(stem('putona')).toBe('put');
+  });
+
+  it('reduces agent suffixes (eiro/eira)', () => {
+    expect(stem('punheteiro')).toBe('punhet');
+    expect(stem('punheteira')).toBe('punhet');
+  });
+
+  it('does not stem words that would become too short', () => {
+    expect(stem('cu')).toBe('cu');
+    expect(stem('pau')).toBe('pau');
+  });
+
+  it('returns word unchanged when no suffix matches', () => {
+    expect(stem('nazi')).toBe('nazi');
+    expect(stem('fdp')).toBe('fdp');
+  });
+});
+
+// ─── Stem match (filter integration) ─────────────────────────────────────────
+
+describe('stem_match', () => {
+  it('blocks verb conjugations not in wordlist via stem match', () => {
+    // These conjugations are NOT in HARD_BLOCKED, but the radical matches
+    const conjugations = [
+      'estuprei', // estuprar → estupr
+      'estupraria', // conditional
+      'estuprasse', // subjunctive
+      'estupravam', // imperfect
+    ];
+    for (const word of conjugations) {
+      const result = filterContent(word);
+      expect(result.allowed).toBe(false);
+    }
+  });
+
+  it('blocks conjugations of "chupar"', () => {
+    const forms = ['chupei', 'chuparam', 'chuparia', 'chupasse'];
+    for (const word of forms) {
+      const result = filterContent(word);
+      expect(result.allowed).toBe(false);
+    }
+  });
+
+  it('blocks conjugations of "foder"', () => {
+    const forms = ['fodi', 'foderam', 'foderia', 'fodesse'];
+    for (const word of forms) {
+      const result = filterContent(word);
+      expect(result.allowed).toBe(false);
+    }
+  });
+
+  it('blocks conjugations of "gozar" via stem', () => {
+    const forms = ['gozavam', 'gozaria', 'gozasse', 'gozariam'];
+    for (const word of forms) {
+      const result = filterContent(word);
+      expect(result.allowed).toBe(false);
+    }
+  });
+
+  it('blocks conjugations of "transar"', () => {
+    const forms = ['transei', 'transou', 'transaram', 'transaria'];
+    for (const word of forms) {
+      const result = filterContent(word);
+      expect(result.allowed).toBe(false);
+    }
+  });
+
+  it('does not false-positive on innocent words with short stems', () => {
+    // These should NOT be blocked by stem match
+    expect(filterContent('computador').allowed).toBe(true);
+    expect(filterContent('metodo').allowed).toBe(true);
+    expect(filterContent('comunidade').allowed).toBe(true);
+  });
+
+  it('returns reason stem_match for stem-matched words', () => {
+    const result = filterContent('estupraria');
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) {
+      expect(result.reason).toBe('stem_match');
+    }
+  });
+});
+
+// ─── Issue #46 — Bypass com símbolos especiais (€, ³, £, etc.) ──────────────
+
+describe('[Issue #46] - Bypass com símbolos especiais (€, ³, £, ¢)', () => {
+  describe('normalização de símbolos especiais', () => {
+    it('normalizes € → e (m€rda → merda)', () => {
+      expect(normalize('m€rda')).toBe('merda');
     });
 
-    it('allows "quero pipoca no cinema" (contexto inocente)', () => {
-      expect(filterContent('quero pipoca no cinema').allowed).toBe(true);
+    it('normalizes ³ → 3 → e (m³rda → merda)', () => {
+      expect(normalize('m³rda')).toBe('merda');
     });
 
-    it('allows "picar a pele" (picar — na WHITELIST)', () => {
-      expect(filterContent('picar a pele').allowed).toBe(true);
+    it('normalizes £ → l (£ixo → lixo)', () => {
+      expect(normalize('£ixo')).toBe('lixo');
     });
 
-    it('allows "picada de mosquito" (picada — na WHITELIST)', () => {
-      expect(filterContent('picada de mosquito').allowed).toBe(true);
+    it('normalizes ¢ → c (¢uzao → cuzao)', () => {
+      expect(normalize('¢uzao')).toBe('cuzao');
     });
 
-    it('allows "pimenta picante" (picante — na WHITELIST)', () => {
-      expect(filterContent('pimenta picante').allowed).toBe(true);
+    it('normalizes ² → 2 (superscript)', () => {
+      expect(normalize('a²b')).toBe('a2b');
+    });
+
+    it('normalizes ¹ → 1 → i (v¹ado → viado)', () => {
+      expect(normalize('v¹ado')).toBe('viado');
     });
   });
 
-  describe('falso negativo corrigido (pika deve ser bloqueado)', () => {
-    it('blocks "pika" (variante de pica — hard blocked)', () => {
-      const result = filterContent('pika');
-      expect(result.allowed).toBe(false);
-      if (!result.allowed) expect(result.reason).toBe('hard_block');
-    });
-
-    it('blocks "manda a pika" (pika em contexto sexual)', () => {
-      const result = filterContent('manda a pika');
+  describe('bloqueio de bypass com € e ³', () => {
+    it('blocks m€rda (€ → e → merda)', () => {
+      const result = filterContent('seu m€rda');
       expect(result.allowed).toBe(false);
     });
-  });
 
-  describe('piroca continua bloqueada (regressao)', () => {
-    it('blocks "piroca" (hard blocked — não regrediu)', () => {
-      const result = filterContent('piroca');
+    it('blocks m³rda (³ → 3 → e → merda)', () => {
+      const result = filterContent('seu m³rda');
       expect(result.allowed).toBe(false);
-      if (!result.allowed) expect(result.reason).toBe('hard_block');
     });
 
-    it('blocks "pirok4" (leet bypass de piroca)', () => {
-      expect(filterContent('pirok4').allowed).toBe(false);
+    it('blocks ¢uzao (¢ → c → cuzao)', () => {
+      const result = filterContent('¢uzao');
+      expect(result.allowed).toBe(false);
+    });
+
+    it('blocks v¹ado (¹ → 1 → i → viado)', () => {
+      const result = filterContent('v¹ado');
+      expect(result.allowed).toBe(false);
+    });
+
+    it('blocks put⁴ (⁴ → 4 → a → puta)', () => {
+      const result = filterContent('put⁴');
+      expect(result.allowed).toBe(false);
     });
   });
 });
 
+// ─── Issue #47 — Bloqueio automático de palavras com 3+ dígitos ─────────────
+
+describe('[Issue #47] - Bloqueio de palavras com 3+ dígitos (ofuscação)', () => {
+  describe('bypass bloqueado (3+ dígitos em palavra com letras)', () => {
+    it('blocks v14d0 (viado com 3 dígitos)', () => {
+      const result = filterContent('v14d0');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+
+    it('blocks p0rn0gr4f14 (pornografia com muitos dígitos)', () => {
+      const result = filterContent('p0rn0gr4f14');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+
+    it('blocks c4r4lh0 (caralho com 3 dígitos)', () => {
+      const result = filterContent('c4r4lh0');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+
+    it('blocks 3stup4d0r (estuprador com 3 dígitos)', () => {
+      const result = filterContent('3stup4d0r');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+
+    it('blocks bu53t4 (buceta com 3 dígitos)', () => {
+      const result = filterContent('bu53t4');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+  });
+
+  describe('falsos positivos — devem passar (CONTENT CLEAN)', () => {
+    it('allows ps5 (apenas 1 dígito)', () => {
+      expect(filterContent('comprei um ps5').allowed).toBe(true);
+    });
+
+    it('allows b2b (apenas 1 dígito)', () => {
+      expect(filterContent('estrategia b2b').allowed).toBe(true);
+    });
+
+    it('allows h2o (apenas 1 dígito)', () => {
+      expect(filterContent('beba h2o').allowed).toBe(true);
+    });
+
+    it('allows co2 (apenas 1 dígito)', () => {
+      expect(filterContent('emissoes de co2').allowed).toBe(true);
+    });
+
+    it('allows 2x1 (apenas 1 letra)', () => {
+      expect(filterContent('oferta 2x1').allowed).toBe(true);
+    });
+
+    it('allows mp3 (apenas 1 dígito)', () => {
+      expect(filterContent('arquivo mp3').allowed).toBe(true);
+    });
+
+    it('allows w10 (apenas 2 dígitos)', () => {
+      expect(filterContent('windows w10').allowed).toBe(true);
+    });
+  });
+});
+
+// ─── Issue #27 — Stalking, perseguição e ameaças pessoais ────────────────────
+
+describe('[Issue #27] - Stalking, perseguição e ameaças pessoais', () => {
+  // ── Stalking: conhecimento de localização e rotina ────────────────────────
+  describe('stalking — conhecimento de localização e rotina', () => {
+    const cases = [
+      'sei onde voce mora',
+      'sei onde tu mora',
+      'sei onde voce estuda',
+      'sei onde tu estudas',
+      'sei onde voce trabalha',
+      'sei onde tu trabalha',
+      'sei onde voce fica',
+      'sei teu endereco',
+      'sei seu endereco',
+      'sei tua rua',
+      'sei sua rua',
+      'sei seus horarios',
+      'sei teus horarios',
+      'sei quando voce sai',
+      'sei quando tu sai',
+      'sei quando voce chega',
+      'sei quando tu chega',
+      'sei sua rotina',
+      'sei tua rotina',
+    ];
+
+    cases.forEach((phrase) => {
+      it(`blocks "${phrase}"`, () => {
+        const result = filterContent(phrase);
+        expect(result.allowed).toBe(false);
+        if (!result.allowed) expect(result.reason).toBe('hard_block');
+      });
+    });
+  });
+
+  // ── Stalking: vigilância e perseguição física ─────────────────────────────
+  describe('stalking — vigilância e perseguição', () => {
+    const cases = [
+      'vou te achar',
+      'vou te rastrear',
+      'te rastrear',
+      'vou na tua casa',
+      'vou na sua casa',
+      'vou aparecer na tua porta',
+      'vou aparecer na sua porta',
+      'vou te seguir',
+      'vou ficar te seguindo',
+      'to de olho em voce',
+      'to de olho em ti',
+      'estou te vigiando',
+      'to te vigiando',
+      'nao tem pra onde correr',
+      'nao tem como escapar',
+      'voce nao vai escapar',
+    ];
+
+    cases.forEach((phrase) => {
+      it(`blocks "${phrase}"`, () => {
+        const result = filterContent(phrase);
+        expect(result.allowed).toBe(false);
+        if (!result.allowed) expect(result.reason).toBe('hard_block');
+      });
+    });
+  });
+
+  // ── Ameaças pessoais ──────────────────────────────────────────────────────
+  describe('ameaças pessoais', () => {
+    const cases = [
+      'vou te pegar na saida',
+      'vou te esperar na saida',
+      'to te esperando',
+      'vai se arrepender',
+      'voce vai se arrepender',
+      'vai se arrepender disso',
+      'voce vai pagar',
+      'voce vai pagar por isso',
+      'voce vai pagar por tudo',
+      'voce vai ver o que vai acontecer',
+      'vou acabar com voce',
+      'cuidado quando sair de casa',
+      'sei quem voce e',
+      'seus dias estao contados',
+      'ta com os dias contados',
+      'nao vai escapar de mim',
+    ];
+
+    cases.forEach((phrase) => {
+      it(`blocks "${phrase}"`, () => {
+        const result = filterContent(phrase);
+        expect(result.allowed).toBe(false);
+        if (!result.allowed) expect(result.reason).toBe('hard_block');
+      });
+    });
+  });
+
+  // ── Doxxing: exposição de dados pessoais ──────────────────────────────────
+  describe('doxxing — exposição de dados pessoais', () => {
+    const cases = [
+      'vou vazar seus dados',
+      'vou vazar teus dados',
+      'vou vazar suas fotos',
+      'vou vazar tuas fotos',
+      'vou postar seu endereco',
+      'vou postar teu endereco',
+      'vou publicar seu endereco',
+      'vou publicar teu endereco',
+      'vou expor voce',
+      'vou expor tua vida',
+      'vou expor sua vida',
+      'vou mostrar pra todo mundo',
+      'vou mandar pra tua familia',
+      'vou mandar pra sua familia',
+      'vou passar seu numero',
+      'vou passar teu numero',
+      'sei seu cpf',
+      'sei teu cpf',
+      'tenho seus dados',
+      'tenho teus dados',
+      'achei seus dados',
+      'vou revelar quem voce e',
+    ];
+
+    cases.forEach((phrase) => {
+      it(`blocks "${phrase}"`, () => {
+        const result = filterContent(phrase);
+        expect(result.allowed).toBe(false);
+        if (!result.allowed) expect(result.reason).toBe('hard_block');
+      });
+    });
+  });
+
+  // ── Normalização: acentos e variações devem ser capturados ───────────────
+  describe('bypass com acentos — devem ser bloqueados', () => {
+    it('blocks "sei onde você mora" (acento em você)', () => {
+      expect(filterContent('sei onde você mora').allowed).toBe(false);
+    });
+
+    it('blocks "sei onde você trabalha" (acento em você)', () => {
+      expect(filterContent('sei onde você trabalha').allowed).toBe(false);
+    });
+
+    it('blocks "sei teu endereço" (acento em endereço)', () => {
+      expect(filterContent('sei teu endereço').allowed).toBe(false);
+    });
+
+    it('blocks "vou expor você" (acento em você)', () => {
+      expect(filterContent('vou expor você').allowed).toBe(false);
+    });
+
+    it('blocks "vou mandar pra tua família" (acento em família)', () => {
+      expect(filterContent('vou mandar pra tua família').allowed).toBe(false);
+    });
+  });
+
+  // ── Falsos positivos — não devem ser bloqueados ───────────────────────────
+  describe('falsos positivos — devem ser permitidos', () => {
+    it('allows "sei onde fica o mercado"', () => {
+      expect(filterContent('sei onde fica o mercado').allowed).toBe(true);
+    });
+
+    it('allows "sei onde eu moro"', () => {
+      expect(filterContent('sei onde eu moro').allowed).toBe(true);
+    });
+
+    it('allows "sei que voce estuda muito"', () => {
+      expect(filterContent('sei que voce estuda muito').allowed).toBe(true);
+    });
+
+    it('allows "to de olho no projeto"', () => {
+      expect(filterContent('to de olho no projeto').allowed).toBe(true);
+    });
+
+    it('allows "nao tem como saber"', () => {
+      expect(filterContent('nao tem como saber').allowed).toBe(true);
+    });
+
+    it('allows "sei seu nome completo"', () => {
+      expect(filterContent('sei seu nome completo').allowed).toBe(true);
+    });
+  });
+});

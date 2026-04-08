@@ -381,6 +381,52 @@ export const HARD_BLOCKED: string[] = [
   'quer transar', 'vamos transar',
   'te pego', 'te como',
 
+  // ── Stalking / perseguicao ──
+  // Conhecimento de localizacao e rotina
+  'sei onde voce mora', 'sei onde tu mora',
+  'sei onde voce estuda', 'sei onde tu estudas',
+  'sei onde voce trabalha', 'sei onde tu trabalha',
+  'sei onde voce fica',
+  'sei teu endereco', 'sei seu endereco',
+  'sei tua rua', 'sei sua rua',
+  'sei seus horarios', 'sei teus horarios',
+  'sei quando voce sai', 'sei quando tu sai',
+  'sei quando voce chega', 'sei quando tu chega',
+  'sei sua rotina', 'sei tua rotina',
+  // Vigilancia e perseguicao fisica
+  'vou te achar', 'vou te rastrear', 'te rastrear',
+  'vou na tua casa', 'vou na sua casa',
+  'vou aparecer na tua porta', 'vou aparecer na sua porta',
+  'vou te seguir', 'vou ficar te seguindo',
+  'to de olho em voce', 'to de olho em ti',
+  'estou te vigiando', 'to te vigiando',
+  'nao tem pra onde correr', 'nao tem como escapar', 'voce nao vai escapar',
+
+  // ── Ameacas pessoais ──
+  'vou te pegar na saida', 'vou te esperar na saida',
+  'to te esperando',
+  'vai se arrepender', 'voce vai se arrepender', 'vai se arrepender disso',
+  'voce vai pagar', 'voce vai pagar por isso', 'voce vai pagar por tudo',
+  'voce vai ver o que vai acontecer',
+  'vou acabar com voce',
+  'cuidado quando sair de casa',
+  'sei quem voce e',
+  'seus dias estao contados', 'ta com os dias contados',
+  'nao vai escapar de mim',
+
+  // ── Doxxing — exposicao de dados pessoais ──
+  'vou vazar seus dados', 'vou vazar teus dados',
+  'vou vazar suas fotos', 'vou vazar tuas fotos',
+  'vou postar seu endereco', 'vou postar teu endereco',
+  'vou publicar seu endereco', 'vou publicar teu endereco',
+  'vou expor voce', 'vou expor tua vida', 'vou expor sua vida',
+  'vou mostrar pra todo mundo',
+  'vou mandar pra tua familia', 'vou mandar pra sua familia',
+  'vou passar seu numero', 'vou passar teu numero',
+  'sei seu cpf', 'sei teu cpf',
+  'tenho seus dados', 'tenho teus dados', 'achei seus dados',
+  'vou revelar quem voce e',
+
   // ── Sites pornograficos ──
   'pornhub', 'xvideos', 'xvidius', 'xnxx', 'redtube', 'youporn',
   'tube8', 'spankbang', 'xhamster', 'beeg', 'tnaflix',

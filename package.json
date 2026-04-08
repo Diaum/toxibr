@@ -1,6 +1,6 @@
 {
   "name": "toxibr",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Biblioteca de moderação de conteúdo para português brasileiro. Filtro com wordlist 200+ termos, detecção context-aware, normalização anti-bypass e bloqueio de links/telefones.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
