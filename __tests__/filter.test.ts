@@ -1600,6 +1600,179 @@ describe('[Issue #46] - Bypass com símbolos especiais (€, ³, £, ¢)', () =>
   });
 });
 
+// ─── Issue #35 — Bypass com acentos incomuns/invertidos ─────────────────────
+//
+// O step 5 do normalize() usa NFD + strip [\u0300-\u036f] para remover
+// combining marks. Estes testes verificam que cada tipo de diacrítico
+// é corretamente removido antes da comparação com a wordlist.
+
+describe('[Issue #35] - Bypass com acentos e diacríticos', () => {
+  // ── Unit: normalize() deve remover cada tipo de diacrítico ────────────────
+  describe('normalize() — remoção de diacríticos pelo step 5 (NFD + strip)', () => {
+    it('remove acento grave: viàdo → viado', () => {
+      expect(normalize('viàdo')).toBe('viado');
+    });
+
+    it('remove acento grave: pùta → puta', () => {
+      expect(normalize('pùta')).toBe('puta');
+    });
+
+    it('remove acento grave: èstupro → estupro', () => {
+      expect(normalize('èstupro')).toBe('estupro');
+    });
+
+    it('remove acento circunflexo: vîado → viado', () => {
+      expect(normalize('vîado')).toBe('viado');
+    });
+
+    it('remove acento circunflexo: pûta → puta', () => {
+      expect(normalize('pûta')).toBe('puta');
+    });
+
+    it('remove acento circunflexo: bûceta → buceta', () => {
+      expect(normalize('bûceta')).toBe('buceta');
+    });
+
+    it('remove til em posição errada: viãdo → viado', () => {
+      expect(normalize('viãdo')).toBe('viado');
+    });
+
+    it('remove til em posição errada: pũta → puta', () => {
+      expect(normalize('pũta')).toBe('puta');
+    });
+
+    it('remove trema: vïado → viado', () => {
+      expect(normalize('vïado')).toBe('viado');
+    });
+
+    it('remove mácron: vīado → viado', () => {
+      expect(normalize('vīado')).toBe('viado');
+    });
+
+    it('remove mácron: pūta → puta', () => {
+      expect(normalize('pūta')).toBe('puta');
+    });
+
+    it('remove cedilha: raça ariana → raca ariana', () => {
+      expect(normalize('raça ariana')).toBe('raca ariana');
+    });
+  });
+
+  // ── Acento grave (à, è, ù) — U+0300 ──────────────────────────────────────
+  describe('acento grave — devem ser bloqueados', () => {
+    it('blocks viàdo (à → a → viado)', () => {
+      const result = filterContent('viàdo');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+
+    it('blocks pùta (ù → u → puta)', () => {
+      const result = filterContent('pùta');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+
+    it('blocks èstupro (è → e → estupro)', () => {
+      const result = filterContent('èstupro');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+  });
+
+  // ── Acento circunflexo (î, û) — U+0302 ───────────────────────────────────
+  describe('acento circunflexo — devem ser bloqueados', () => {
+    it('blocks vîado (î → i → viado)', () => {
+      const result = filterContent('vîado');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+
+    it('blocks pûta (û → u → puta)', () => {
+      const result = filterContent('pûta');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+
+    it('blocks bûceta (û → u → buceta)', () => {
+      const result = filterContent('bûceta');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+  });
+
+  // ── Til em posição errada (ã, ũ) — U+0303 ────────────────────────────────
+  describe('til em posição errada — devem ser bloqueados', () => {
+    it('blocks viãdo (ã → a → viado)', () => {
+      const result = filterContent('viãdo');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+
+    it('blocks pũta (ũ → u → puta)', () => {
+      const result = filterContent('pũta');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+  });
+
+  // ── Cedilha (ç) — U+0327 ─────────────────────────────────────────────────
+  describe('cedilha — normaliza e bloqueia contexto racista', () => {
+    it('blocks raça ariana (ç → c → raca ariana)', () => {
+      const result = filterContent('raça ariana');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+  });
+
+  // ── Trema/diérese (ï) — U+0308 ───────────────────────────────────────────
+  describe('trema (obsoleto, usado como bypass) — deve ser bloqueado', () => {
+    it('blocks vïado (ï → i → viado)', () => {
+      const result = filterContent('vïado');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+  });
+
+  // ── Mácron (ī, ū) — U+0304 ───────────────────────────────────────────────
+  describe('mácron — devem ser bloqueados', () => {
+    it('blocks vīado (ī → i → viado)', () => {
+      const result = filterContent('vīado');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+
+    it('blocks pūta (ū → u → puta)', () => {
+      const result = filterContent('pūta');
+      expect(result.allowed).toBe(false);
+      if (!result.allowed) expect(result.reason).toBe('hard_block');
+    });
+  });
+
+  // ── Matriz completa da issue — todos os casos listados devem ser bloqueados
+  describe('matriz completa da issue #35', () => {
+    const cases: Array<[string, string]> = [
+      ['viàdo', 'grave em a'],
+      ['pùta', 'grave em u'],
+      ['èstupro', 'grave em e'],
+      ['vîado', 'circunflexo em i'],
+      ['pûta', 'circunflexo em u'],
+      ['bûceta', 'circunflexo em u'],
+      ['viãdo', 'til em posição errada'],
+      ['pũta', 'til em u'],
+      ['raça ariana', 'cedilha'],
+      ['vïado', 'trema em i'],
+      ['vīado', 'mácron em i'],
+      ['pūta', 'mácron em u'],
+    ];
+
+    cases.forEach(([input, description]) => {
+      it(`blocks "${input}" (${description})`, () => {
+        expect(filterContent(input).allowed).toBe(false);
+      });
+    });
+  });
+});
+
 // ─── Issue #47 — Bloqueio automático de palavras com 3+ dígitos ─────────────
 
 describe('[Issue #47] - Bloqueio de palavras com 3+ dígitos (ofuscação)', () => {
