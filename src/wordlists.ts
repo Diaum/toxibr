@@ -34,7 +34,7 @@ export const ABBREVIATION_MAP: Record<string, string> = {
   gts: 'gostosa',
   gtso: 'gostoso',
   xvd: 'xvideos',
-  xvi: 'xvideos',
+  // xvi removido: numeral romano XVI usado em títulos de jogos (ex: Final Fantasy XVI)
   prnhb: 'pornhub',
   urac: 'urach',
   xxt: 'xoxota',
@@ -65,7 +65,7 @@ export const ABBREVIATION_MAP: Record<string, string> = {
   pz: 'pauzao',
   // Issue #42 — novos termos
   prn: 'porno',
-  sx: 'sexo',
+  // sx removido: 'SSX' (jogo EA) normaliza ssx→sx causando falso positivo; 'sexo' já está em HARD_BLOCKED
   trd: 'tarado',
 };
 
@@ -104,7 +104,8 @@ export const HARD_BLOCKED: string[] = [
   'bronha', 'brnha', 'bronheiro', 'lisinha',
   'tirador de leite',
   'xxt', 'crn', 'fdd', 'rabt', 'pnt', 'gls', 'chp', 'cnh',
-  'raba', 'pz', 'dlc',
+  'raba', 'pz',
+  // 'dlc' removido: termo de gaming (Downloadable Content) — falso positivo para jogadores
   'brasileirinhas',
 
   // ── Conteudo sexual explicito ──
@@ -621,6 +622,8 @@ export const SELF_EXPRESSION_PATTERNS: RegExp[] = [
   /\bque\s+putaria\b/i, // "que putaria"
   /\bta\s+foda\b/i, // "ta foda"
   /\be\s+foda\b/i, // "e foda"
+  // Contexto de gaming — "jogar" é context-sensitive mas é inocente quando seguido de preposição de jogo
+  /\bjogar\s+(?:com|no|na|contra|de|o|a)\b/i, // "jogar com voce", "jogar contra voce", "jogar no PC"
 ];
 // ── Whitelist (Exceções para evitar falsos positivos) ────────────────────────
 // Palavras que NUNCA devem ser bloqueadas, mesmo que sejam parecidas com palavrões.

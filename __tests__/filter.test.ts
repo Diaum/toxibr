@@ -243,8 +243,8 @@ describe('abbreviation fixes (v2)', () => {
     expect(filterContent('pnc').allowed).toBe(false);
   });
 
-  it('blocks "dlc" (fixed key: was dlç)', () => {
-    expect(filterContent('dlc').allowed).toBe(false);
+  it('allows "dlc" (Downloadable Content — falso positivo para gamers)', () => {
+    expect(filterContent('dlc').allowed).toBe(true);
   });
 });
 
@@ -1539,9 +1539,10 @@ describe('[Issue #42] - 10 Termos Reportados', () => {
       expect(result.allowed).toBe(false);
     });
 
-    it('blocks "sx" (abreviação via ABBREVIATION_MAP)', () => {
-      const result = filterContent('sx');
-      expect(result.allowed).toBe(false);
+    it('allows "sx" isolado (removido de ABBREVIATION_MAP — SSX é jogo EA; "sexo" permanece bloqueado)', () => {
+      // "sx" foi removido do mapa pois "SSX" (jogo EA Sports) colapsava ss→s→sx→sexo
+      // A cobertura permanece via: "sexo" hard-blocked, s3x0 (leet), s*x (bypass)
+      expect(filterContent('sx').allowed).toBe(true);
     });
 
     it('normalize converte s3x0 para sexo', () => {
