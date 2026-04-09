@@ -3,7 +3,7 @@
 // Todas as palavras devem estar em lowercase, sem acentos.
 // Variantes com @ e leetspeak NAO precisam estar aqui — o normalizador cuida.
 
-/** Abreviações comuns BR → palavra completa (para expansão na normalização). */
+// Abreviações comuns BR → expansão na normalização.
 // prettier-ignore
 export const ABBREVIATION_MAP: Record<string, string> = {
   ppk: 'pepeca',
@@ -63,13 +63,12 @@ export const ABBREVIATION_MAP: Record<string, string> = {
   xrc: 'xereca',
   xib: 'xibiu',
   pz: 'pauzao',
-  // Issue #42 — novos termos
   prn: 'porno',
   // sx removido: 'SSX' (jogo EA) normaliza ssx→sx causando falso positivo; 'sexo' já está em HARD_BLOCKED
   trd: 'tarado',
 };
 
-/** Palavras SEMPRE bloqueadas, independente do contexto. */
+// Palavras sempre bloqueadas, independente do contexto.
 // prettier-ignore
 export const HARD_BLOCKED: string[] = [
   // ── Slurs / ofensas graves ──
@@ -168,7 +167,7 @@ export const HARD_BLOCKED: string[] = [
   'corno', 'cornudo', 'cornuda',
   'rabeta', 'gulosa', 'cunhete',
   'bunda', 'pauzao', 'fodido',
-  // Issue #42 — expansões de abreviações sem entrada em HARD_BLOCKED
+  //   expansões de abreviações sem entrada em HARD_BLOCKED
   'foda-se', 'puta que pariu', 'urach', 'bucetuda', 'fodendo', 'tesao',
 
   // ── Pedofilia / grooming ──
@@ -294,6 +293,12 @@ export const HARD_BLOCKED: string[] = [
   'vou te matar', 'vou matar voce',
   'se mata', 'se matar', 'vai se matar',
   'suicida-se',
+  // Autolesão / suicídio — frases diretas; "atire-se" e "atire se" são entradas separadas.
+  'se jogue da ponte', 'se jogue do predio',
+  'pule da ponte', 'pule do predio',
+  'atire-se da ponte', 'atire se da ponte',
+  'atire-se do predio', 'atire se do predio',
+  'suicidio', 'suicidar', 'autoexterminio',
   'tira sua vida', 'tirava minha vida', 'tira a vida',
   'tirar sua propria vida', 'tirar a propria vida',
   'tiro na propria cabeca', 'tiro na cabeca',
@@ -307,6 +312,13 @@ export const HARD_BLOCKED: string[] = [
   'se enforca', 'se enforcar', 'pega uma corda',
   'sangra ate a morte', 'sangre ate morrer', 'sangrar ate morrer',
   'corta o pulso', 'pontinhado no pulso',
+  // ── Assassinato / homicidio ──
+  'assassinato', 'assassinio',
+  'assassina', 'assassinar', 'assassinado', 'assassino',
+  'assassinando', 'assassinei', 'assassinaste',
+  'assassinou', 'assassinava', 'assassinavas',
+  'assassinarei', 'assassinaras', 'assassinara',
+  'matador', 'homicida',
   'matei gente', 'ja matei gente', 'matar gente',
   'quero que tu sangre', 'quero que voce sangre',
   'deveria se matar', 'devia se matar',
@@ -439,8 +451,7 @@ export const HARD_BLOCKED: string[] = [
   'livejasmin', 'flirt4free', 'myfreecams', 'camsoda',
 ];
 
-/** Palavras bloqueadas APENAS quando dirigidas a outra pessoa.
- *  Permitidas em auto-expressão (ex: "eu me sinto um lixo"). */
+// Palavras bloqueadas apenas quando dirigidas — permitidas em auto-expressão.
 // prettier-ignore
 export const CONTEXT_SENSITIVE: string[] = [
   'lixo',
@@ -467,32 +478,15 @@ export const CONTEXT_SENSITIVE: string[] = [
   'mulher moderna',
   'inocente',
   'pequena',
-  // Movidos de hard-block (falsos positivos comuns em PT-BR)
-  'pau',         // "pau mandado", "pau de selfie", "pau pra toda obra"
-  'rola',        // "rola de ir?", "rola um papo"
-  'cacete',      // "cacete, que dia dificil"
-  'cu',          // "recuar", contexto comum
-  'pica',        // "pica-pau", "que pica" (que legal, regional)
-  'caralho',     // "caralho!" como exclamacao de surpresa
-  'foda',        // "caralho, hoje ta foda" como exclamacao
-  'rabo',            // "rabo do cachorro" vs "teu rabo"
-  'merda', 'merdao', // "que merda", "dia de merda"
-  'bosta',           // "isso e uma bosta", "que bosta"
-  'putaria',         // "que putaria e essa" como exclamacao
-  'porra',           // "que porra" como exclamacao
-  'caralha', 'caralhudo',  // variantes de caralho
-  // Movidos de abbreviation warnings (contexto inocente comum)
-  'gostosa', 'gostoso',  // "comida gostosa", "dia gostoso"
-  'delicia',              // "que delicia de bolo"
-  'dp',                 // "dp do prédio", "delegacia de polícia"
-  'dupla penetracao',
-  // Issue #42 — context-sensitive: inocentes fora do contexto sexual dirigido
-  'adulto',   // "adulto responsavel" vs "conteudo adulto" dirigido
-  'leite',    // "copo de leite" vs conotacao sexual dirigida
-  'jogar',    // "jogar bola" vs "jogar leite" em contexto dirigido
+  'pau', 'rola', 'cacete', 'cu', 'pica', 'caralho', 'foda',
+  'rabo', 'merda', 'merdao', 'bosta', 'putaria', 'porra',
+  'caralha', 'caralhudo',
+  'gostosa', 'gostoso', 'delicia',
+  'dp', 'dupla penetracao',
+  'adulto', 'leite', 'jogar',
 ];
 
-/** Emojis SEMPRE bloqueados (inequivocamente ofensivos). */
+// Emojis sempre bloqueados.
 // prettier-ignore
 export const OFFENSIVE_EMOJIS: string[] = [
   '🖕',     // dedo do meio
@@ -500,7 +494,7 @@ export const OFFENSIVE_EMOJIS: string[] = [
   '💦',     // ejaculacao
 ];
 
-/** Sequências de emojis ofensivas (combinações inequívocas). */
+// Sequências de emojis ofensivos.
 // prettier-ignore
 export const OFFENSIVE_EMOJI_SEQUENCES: string[] = [
   // ── Conotação sexual explícita ──
@@ -529,7 +523,7 @@ export const OFFENSIVE_EMOJI_SEQUENCES: string[] = [
   '🍌🐵',
 ];
 
-/** Emojis bloqueados APENAS quando dirigidos a outra pessoa (contexto racial). */
+// Emojis bloqueados apenas quando dirigidos a outra pessoa.
 // prettier-ignore
 export const CONTEXT_SENSITIVE_EMOJIS: string[] = [
   '🐵',     // macaco
@@ -537,8 +531,7 @@ export const CONTEXT_SENSITIVE_EMOJIS: string[] = [
   '🦍',     // gorila
 ];
 
-/** Palavras-semente sexuais — inocentes sozinhas, suspeitas quando 3+ aparecem juntas.
- *  Todas devem estar em lowercase, sem acentos. */
+// Palavras-semente: inocentes sozinhas, suspeitas quando 3+ aparecem em janela de 10 palavras.
 // prettier-ignore
 export const SEXUAL_SEED_WORDS: string[] = [
   // Corpo / anatomia
@@ -564,11 +557,10 @@ export const SEXUAL_SEED_WORDS: string[] = [
   'bafo', 'bambas', 'fundo', 'forca',
   'cachorra', 'arreganhada', 'esfolado',
   'squirt', 'melam', 'melou',
-  // Issue #42
   'pornografia', 'tarado', 'sexo',
 ];
 
-/** Padrões que indicam fala dirigida a outra pessoa (2ª pessoa). */
+// Padrões que indicam fala dirigida (2ª pessoa).
 export const DIRECTED_PATTERNS: RegExp[] = [
   /\bvoc[eê]s?\b/i,
   /\bvc\b/i,
@@ -589,7 +581,7 @@ export const DIRECTED_PATTERNS: RegExp[] = [
   /\bmete\s+no\b/i,
 ];
 
-/** Padrões que indicam auto-expressão (1ª pessoa) — contexto seguro. */
+// Padrões de auto-expressão (1ª pessoa) — contexto seguro.
 export const SELF_EXPRESSION_PATTERNS: RegExp[] = [
   /\beu\s+(me\s+)?sinto\b/i,
   /\beu\s+sou\b/i,
@@ -625,6 +617,25 @@ export const SELF_EXPRESSION_PATTERNS: RegExp[] = [
   // Contexto de gaming — "jogar" é context-sensitive mas é inocente quando seguido de preposição de jogo
   /\bjogar\s+(?:com|no|na|contra|de|o|a)\b/i, // "jogar com voce", "jogar contra voce", "jogar no PC"
 ];
-// ── Whitelist (Exceções para evitar falsos positivos) ────────────────────────
-// Palavras que NUNCA devem ser bloqueadas, mesmo que sejam parecidas com palavrões.
-export const WHITELIST: string[] = ['pipoca', 'picar', 'picada', 'picante'];
+// Regex parciais testadas no texto normalizado — bloqueiam pelo fragmento, ignoram o complemento.
+export const PARTIAL_BLOCK_PATTERNS: RegExp[] = [
+  // Cobre "se joga/jogue/jogar + do/da/de <qualquer coisa>" (ex: "se jogue da janela").
+  /\bse jog(?:a|ue|ar) d[oae]\b/,
+];
+
+// Palavras que nunca devem ser bloqueadas.
+export const WHITELIST: string[] = [
+  'pipoca',
+  'picar',
+  'picada',
+  'picante',
+  // Bandas — previnem falsos positivos (prefixo, fuzzy e Layer 0e de dígitos).
+  'Cher',
+  'Queen',
+  'Green Day',
+  'The Offspring',
+  'Blink-182',
+  'Linkin Park',
+  'Evanescence',
+  'System of a Down',
+];

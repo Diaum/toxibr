@@ -12,6 +12,7 @@ import {
   OFFENSIVE_EMOJI_SEQUENCES,
   CONTEXT_SENSITIVE_EMOJIS,
   WHITELIST,
+  PARTIAL_BLOCK_PATTERNS,
 } from './wordlists';
 import type {
   FilterResult,
@@ -188,8 +189,7 @@ export function normalize(input: string): string {
 
   // 8. Remove censoring characters (* #) between letters
   t = t.replace(/[*#]+/g, '');
-  // 8c. Convert ! used as bypass for 'i' — only when directly between word chars
-  //     Handles "cuz!nh0" → "cuzinho". Trailing/leading ! (e.g. "valeu!") is untouched.
+  // 8c. Convert ! as bypass for 'i' only between word chars ("cuz!nh0" → "cuzinho")
   t = t.replace(/(\w)!+(\w)/g, (_, a, b) => a + 'i' + b);
 
   // 8b. Remove dots/dashes between single chars (p.u.t.a → puta)
@@ -204,7 +204,7 @@ export function normalize(input: string): string {
     const normalizada = match.replace(/\s+/g, '').toLowerCase();
 
     if (blocklist.has(normalizada)) {
-      return normalizada; // ou "***", ou bloquear como quiser
+      return normalizada;
     }
 
     return match;
@@ -410,11 +410,7 @@ const STEM_SUFFIXES = [
 /** Minimum stem length — stems shorter than this are not produced. */
 const MIN_STEM_LEN = 3;
 
-/**
- * Lightweight PT-BR stemmer: strips the first matching suffix and returns the
- * radical. Returns the original word when no suffix matches or the stem would
- * be shorter than MIN_STEM_LEN.
- */
+// Strips the first matching suffix; returns the word unchanged if no suffix matches or stem too short.
 export function stem(word: string): string {
   for (const suf of STEM_SUFFIXES) {
     if (word.length > suf.length + MIN_STEM_LEN - 1 && word.endsWith(suf)) {
@@ -424,10 +420,7 @@ export function stem(word: string): string {
   return word;
 }
 
-/**
- * Stems that are known false-positives — innocent words whose stem collides
- * with a blocked word's stem. Checked against the *message word's* stem.
- */
+// Innocent word stems that collide with blocked word stems.
 const STEM_ALLOWLIST = new Set([
   // "computador/computar" → stem "comput" — innocent
   'comput',
@@ -462,13 +455,11 @@ function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// ─── Build regex list from words ─────────────────────────────────────────────
-
+// Normaliza cada entrada e envolve com \b para evitar substring matches em frases multi-palavra.
 function buildRegexes(words: string[]): { word: string; regex: RegExp }[] {
   return words.map((word) => {
     const n = normalize(word);
-    const pattern = n.includes(' ') ? escapeRegex(n) : `\\b${escapeRegex(n)}\\b`;
-    return { word, regex: new RegExp(pattern) };
+    return { word, regex: new RegExp(`\\b${escapeRegex(n)}\\b`) };
   });
 }
 
@@ -607,13 +598,7 @@ export function createFilter(options: ToxiBROptions = {}): ToxiBRFilter {
   function _filter(text: string): FilterResult {
     const normalized = normalize(text);
 
-    // Layer 0: Censorship bypass detection
-    // * or # between any two letters (p*ta, v#ado)
-    // @ between letters as bypass separator (g@z0, t@r@d0) — distinct from the
-    //   LEET map that converts @ → a for leet-style writes like t@r4d0.
-    // Non-leet digits 2,6,8,9 used as separators — require ≥2 letters on at
-    //   least one side so that technical terms like b2b / ps5 / 2x1 are allowed.
-    // Emojis used as separators within a word (v🍑ado) — same ≥2-letter rule.
+    // Layer 0: Censorship bypass detection (* # @ separators, non-leet digits, emoji separators).
     const _emojiSepRe =
       /[a-zA-Z]{2,}\p{Extended_Pictographic}[a-zA-Z]|[a-zA-Z]\p{Extended_Pictographic}[a-zA-Z]{2,}/u;
     if (
@@ -711,6 +696,14 @@ export function createFilter(options: ToxiBROptions = {}): ToxiBRFilter {
     for (const { word, regex } of hardBlockedRegexes) {
       if (regex.test(normalized)) {
         return makeResult('hard_block', word);
+      }
+    }
+
+    // Layer 1p: Partial fragment patterns — block by fragment regardless of what follows.
+    for (const pattern of PARTIAL_BLOCK_PATTERNS) {
+      const m = normalized.match(pattern);
+      if (m) {
+        return makeResult('hard_block', m[0]);
       }
     }
 

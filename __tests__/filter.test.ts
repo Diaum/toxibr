@@ -454,7 +454,7 @@ describe('false positives — must NEVER block', () => {
     'Vou disputar o jogo',
     'O deputado falou',
     'Reputação é importante',
-    'Assassino no filme',
+    // 'Assassino no filme' — removido: "assassino" agora é hard-blocked (v3)
   ];
 
   safe.forEach((phrase) => {
@@ -884,8 +884,8 @@ describe('word boundary safety', () => {
     expect(filterContent('minha reputação').allowed).toBe(true);
   });
 
-  it('does NOT block "assassino" (contains "ass")', () => {
-    expect(filterContent('o assassino').allowed).toBe(true);
+  it('does NOT block "computador" (contains "put")', () => {
+    expect(filterContent('meu computador lento').allowed).toBe(true);
   });
 });
 
@@ -1383,7 +1383,7 @@ describe('leetspeak legítimo (0, 1, 3, 4, 5, 7) continua funcionando via Layer 
 
 // ─── Issue #42 — 10 Termos Não Capturados ────────────────────────────────────
 
-describe('[Issue #42] - 10 Termos Reportados', () => {
+describe('10 Termos Reportados', () => {
   // ── pornografia ────────────────────────────────────────────────────────────
 
   describe('pornografia — variantes de bypass', () => {
@@ -1741,9 +1741,9 @@ describe('stem_match', () => {
   });
 });
 
-// ─── Issue #46 — Bypass com símbolos especiais (€, ³, £, etc.) ──────────────
+// ───  Bypass com símbolos especiais (€, ³, £, etc.) ──────────────
 
-describe('[Issue #46] - Bypass com símbolos especiais (€, ³, £, ¢)', () => {
+describe('Bypass com símbolos especiais (€, ³, £, ¢)', () => {
   describe('normalização de símbolos especiais', () => {
     it('normalizes € → e (m€rda → merda)', () => {
       expect(normalize('m€rda')).toBe('merda');
@@ -1798,9 +1798,9 @@ describe('[Issue #46] - Bypass com símbolos especiais (€, ³, £, ¢)', () =>
   });
 });
 
-// ─── Issue #47 — Bloqueio automático de palavras com 3+ dígitos ─────────────
+// ───  Bloqueio automático de palavras com 3+ dígitos ─────────────
 
-describe('[Issue #47] - Bloqueio de palavras com 3+ dígitos (ofuscação)', () => {
+describe('[  Bloqueio de palavras com 3+ dígitos (ofuscação)', () => {
   describe('bypass bloqueado (3+ dígitos em palavra com letras)', () => {
     it('blocks v14d0 (viado com 3 dígitos)', () => {
       const result = filterContent('v14d0');
@@ -1866,7 +1866,7 @@ describe('[Issue #47] - Bloqueio de palavras com 3+ dígitos (ofuscação)', () 
 
 // ─── Issue #27 — Stalking, perseguição e ameaças pessoais ────────────────────
 
-describe('[Issue #27] - Stalking, perseguição e ameaças pessoais', () => {
+describe('Stalking, perseguição e ameaças pessoais', () => {
   // ── Stalking: conhecimento de localização e rotina ────────────────────────
   describe('stalking — conhecimento de localização e rotina', () => {
     const cases = [
