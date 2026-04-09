@@ -2076,10 +2076,26 @@ describe('times de futebol brasileiro — falsos positivos (issue #62)', () => {
   // Nomes oficiais e apelidos comuns — devem passar normalmente
   it('permite nomes oficiais dos times da Serie A', () => {
     const times = [
-      'Flamengo', 'Palmeiras', 'Corinthians', 'Sao Paulo', 'Gremio',
-      'Internacional', 'Atletico MG', 'Cruzeiro', 'Fluminense', 'Botafogo',
-      'Vasco', 'Santos', 'Bahia', 'Fortaleza', 'Athletico PR',
-      'Bragantino', 'Cuiaba', 'Vitoria', 'Chapecoense', 'Mirassol',
+      'Flamengo',
+      'Palmeiras',
+      'Corinthians',
+      'Sao Paulo',
+      'Gremio',
+      'Internacional',
+      'Atletico MG',
+      'Cruzeiro',
+      'Fluminense',
+      'Botafogo',
+      'Vasco',
+      'Santos',
+      'Bahia',
+      'Fortaleza',
+      'Athletico PR',
+      'Bragantino',
+      'Cuiaba',
+      'Vitoria',
+      'Chapecoense',
+      'Mirassol',
     ];
     for (const time of times) {
       expect(filterContent(`o jogo do ${time} foi incrivel`).allowed).toBe(true);
@@ -2088,8 +2104,15 @@ describe('times de futebol brasileiro — falsos positivos (issue #62)', () => {
 
   it('permite apelidos carinhosos comuns', () => {
     const apelidos = [
-      'Mengao', 'Timao', 'Vascao', 'Fogao', 'Fluzao', 'Peixao',
-      'Coringao', 'Papao', 'Dogao',
+      'Mengao',
+      'Timao',
+      'Vascao',
+      'Fogao',
+      'Fluzao',
+      'Peixao',
+      'Coringao',
+      'Papao',
+      'Dogao',
     ];
     for (const apelido of apelidos) {
       expect(filterContent(`torcida do ${apelido} e a melhor`).allowed).toBe(true);
@@ -2098,24 +2121,24 @@ describe('times de futebol brasileiro — falsos positivos (issue #62)', () => {
 
   it('permite apelidos de mascotes/animais usados no futebol', () => {
     const mascotes = [
-      'Galo',     // Atletico-MG
-      'Raposa',   // Cruzeiro
-      'Urubu',    // Flamengo
-      'Coelho',   // America-MG
-      'Leao',     // Sport / Fortaleza / varios
-      'Tigre',    // Criciuma / Vila Nova
-      'Tubarao',  // Londrina / Sampaio Correa
-      'Baleia',   // Santos
-      'Galinha',  // apelido de rival (Atletico-MG / Corinthians)
-      'Porcada',  // torcida do Palmeiras
-      'Suino',    // Palmeiras
-      'Gambá',    // Corinthians
-      'Timbu',    // Nautico
-      'Pantera',  // Botafogo-SP / Democrata
-      'Dragao',   // Atletico-GO / Atletico-CE
-      'Coruja',   // Operario-PR / Tirol
-      'Gaviao',   // Manaus / Tombense
-      'Aguia',    // varios
+      'Galo', // Atletico-MG
+      'Raposa', // Cruzeiro
+      'Urubu', // Flamengo
+      'Coelho', // America-MG
+      'Leao', // Sport / Fortaleza / varios
+      'Tigre', // Criciuma / Vila Nova
+      'Tubarao', // Londrina / Sampaio Correa
+      'Baleia', // Santos
+      'Galinha', // apelido de rival (Atletico-MG / Corinthians)
+      'Porcada', // torcida do Palmeiras
+      'Suino', // Palmeiras
+      'Gambá', // Corinthians
+      'Timbu', // Nautico
+      'Pantera', // Botafogo-SP / Democrata
+      'Dragao', // Atletico-GO / Atletico-CE
+      'Coruja', // Operario-PR / Tirol
+      'Gaviao', // Manaus / Tombense
+      'Aguia', // varios
     ];
     for (const mascote of mascotes) {
       expect(filterContent(`${mascote} na area`).allowed).toBe(true);
@@ -2124,8 +2147,15 @@ describe('times de futebol brasileiro — falsos positivos (issue #62)', () => {
 
   it('permite apelidos de identidade/cor usados no futebol', () => {
     const identidades = [
-      'Rubro-Negro', 'Tricolor', 'Alviverde', 'Alvinegro',
-      'Colorado', 'Verdao', 'Celeste', 'Cruzmaltino', 'Esmeraldino',
+      'Rubro-Negro',
+      'Tricolor',
+      'Alviverde',
+      'Alvinegro',
+      'Colorado',
+      'Verdao',
+      'Celeste',
+      'Cruzmaltino',
+      'Esmeraldino',
     ];
     for (const id of identidades) {
       expect(filterContent(`${id} e o melhor`).allowed).toBe(true);
@@ -2134,11 +2164,11 @@ describe('times de futebol brasileiro — falsos positivos (issue #62)', () => {
 
   it('permite apelidos pejorativos ressignificados pelos proprios torcedores', () => {
     const ressignificados = [
-      'Porco',    // Palmeiras
-      'Urubu',    // Flamengo
-      'Gambá',   // Corinthians
-      'Coelho',   // America-MG
-      'Timbu',    // Nautico
+      'Porco', // Palmeiras
+      'Urubu', // Flamengo
+      'Gambá', // Corinthians
+      'Coelho', // America-MG
+      'Timbu', // Nautico
     ];
     for (const term of ressignificados) {
       expect(filterContent(`${term} nao para de ganhar`).allowed).toBe(true);
