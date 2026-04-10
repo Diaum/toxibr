@@ -3184,3 +3184,97 @@ describe('times da NFL — nomes e apelidos não devem ser bloqueados', () => {
     });
   });
 });
+
+// ─── Issue #89: frases tóxicas escapando do filtro ──────────────────────────
+
+describe('issue #89 — harassment phrases with reordering/conjugation', () => {
+  describe('blocks harassment despite word reordering', () => {
+    it('blocks "QUEIMA SUA CASA COM TODO MUNDO DENTRO, PERDEDOR"', () => {
+      const r = filterContent('QUEIMA SUA CASA COM TODO MUNDO DENTRO, PERDEDOR');
+      expect(r.allowed).toBe(false);
+    });
+
+    it('blocks "a vergonha que tua mae sente de tu deve ser enorme"', () => {
+      const r = filterContent('a vergonha que tua mae sente de tu deve ser enorme');
+      expect(r.allowed).toBe(false);
+    });
+
+    it('blocks "a vergonha que seu pai sente de voce deve ser enorme, chora no banho"', () => {
+      const r = filterContent('a vergonha que seu pai sente de voce deve ser enorme, chora no banho');
+      expect(r.allowed).toBe(false);
+    });
+  });
+
+  describe('blocks conjugation variants of multi-word phrases', () => {
+    it('blocks "chora no banho" (conjugated form of "chorar no banho")', () => {
+      const r = filterContent('chora no banho');
+      expect(r.allowed).toBe(false);
+    });
+
+    it('blocks "chorar no banho" (original form)', () => {
+      const r = filterContent('chorar no banho');
+      expect(r.allowed).toBe(false);
+    });
+  });
+
+  describe('blocks death threats with "morra/morrer"', () => {
+    it('blocks "voce morra"', () => {
+      expect(filterContent('voce morra').allowed).toBe(false);
+    });
+
+    it('blocks "vai morrer tu"', () => {
+      expect(filterContent('vai morrer tu').allowed).toBe(false);
+    });
+
+    it('blocks "espero que tu morra"', () => {
+      expect(filterContent('espero que tu morra').allowed).toBe(false);
+    });
+
+    it('blocks "morre logo"', () => {
+      expect(filterContent('morre logo').allowed).toBe(false);
+    });
+
+    it('blocks "morra logo"', () => {
+      expect(filterContent('morra logo').allowed).toBe(false);
+    });
+  });
+
+  describe('blocks fire threats', () => {
+    it('blocks "taca fogo na tua casa"', () => {
+      expect(filterContent('taca fogo na tua casa').allowed).toBe(false);
+    });
+  });
+
+  describe('dynamic proximity radius for directed insults', () => {
+    it('blocks insult at end of long sentence with pronoun at start', () => {
+      const r = filterContent('QUEIMA SUA CASA COM TODO MUNDO DENTRO, PERDEDOR');
+      expect(r.allowed).toBe(false);
+    });
+  });
+
+  describe('does NOT false-positive on innocent phrases', () => {
+    it('allows "voce mora longe"', () => {
+      expect(filterContent('voce mora longe').allowed).toBe(true);
+    });
+
+    it('allows "tu mora perto"', () => {
+      expect(filterContent('tu mora perto').allowed).toBe(true);
+    });
+
+    it('allows "ele mora ali"', () => {
+      expect(filterContent('ele mora ali').allowed).toBe(true);
+    });
+
+    it('allows "eu me sinto um perdedor"', () => {
+      expect(filterContent('eu me sinto um perdedor').allowed).toBe(true);
+    });
+
+    it('allows "que vergonha eu passei"', () => {
+      expect(filterContent('que vergonha eu passei').allowed).toBe(true);
+    });
+
+    it('allows "a casa ficou com cheiro de queimado"', () => {
+      expect(filterContent('a casa ficou com cheiro de queimado').allowed).toBe(true);
+    });
+  });
+});

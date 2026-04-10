@@ -331,6 +331,12 @@ export const HARD_BLOCKED: string[] = [
   'beber alvejante',
   'sentem pena de voce', 'sentem pena de tu',
   'pais sentem pena',
+  // Ameacas de morte dirigidas (apenas formas que nao colidem com "morar" apos normalizacao)
+  'vai morrer', 'vai morrer voce', 'vai morrer tu',
+  'morre logo', 'morra logo', 'morrer logo',
+  'quero que voce morra', 'quero que tu morra',
+  'espero que voce morra', 'espero que tu morra',
+  'tomara que voce morra', 'tomara que tu morra',
 
   // ── Assedio / bullying / humilhacao ──
   'vergonha pra familia', 'vergonha pra tua familia', 'vergonha pra sua familia',
@@ -624,6 +630,20 @@ export const SELF_EXPRESSION_PATTERNS: RegExp[] = [
 export const PARTIAL_BLOCK_PATTERNS: RegExp[] = [
   // Cobre "se joga/jogue/jogar + do/da/de <qualquer coisa>" (ex: "se jogue da janela").
   /\bse jog(?:a|ue|ar) d[oae]\b/,
+
+  // ── Harassment flexivel — captura variações de ordem/conjugação ──
+
+  // "vergonha" + pronome dirigido + família (mae/pai) em qualquer ordem
+  // Ex: "a vergonha que tua mae sente de tu", "tua mae sente vergonha de tu"
+  /\bvergonha\b.{0,40}\b(?:tu[ae]?|seu|sua|teu|de (?:tu|voce|vc))\b.{0,30}\b(?:mae|pai|familia)\b/,
+  /\b(?:mae|pai|familia)\b.{0,30}\b(?:sent[eir]|tem?r?)\b.{0,20}\bvergonha\b.{0,20}\b(?:de )?(?:tu|voce|vc)\b/,
+
+  // "chora/chorar/chore + no banho" — qualquer conjugação
+  /\bchor(?:a|ar|e|ou|ando) no banho\b/,
+
+  // "queima/queimar/taca fogo + casa/familia" — ameaças de incêndio
+  /\b(?:queim(?:a|ar|e|o)|ta[cç](?:a|ar|ou|o)\s+fogo|bot(?:a|ar|e|ou)\s+fogo)\b.{0,30}\b(?:casa|familia|predio)\b/,
+
 ];
 
 // Palavras que nunca devem ser bloqueadas.

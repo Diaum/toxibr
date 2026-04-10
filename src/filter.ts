@@ -530,6 +530,22 @@ export function createFilter(options: ToxiBROptions = {}): ToxiBRFilter {
     if (s.length >= MIN_STEM_LEN) blockedStems.add(s);
   }
 
+  // Pre-compute stemmed multi-word phrases for conjugation-tolerant matching
+  const stemmedPhrases: { original: string; stems: string[] }[] = [];
+  for (const w of allBlocked) {
+    const n = normalize(w);
+    if (!n.includes(' ')) continue;
+    const words = n.split(/\s+/);
+    const stemmed = words.map((word) => {
+      const s = stem(word);
+      return s.length >= MIN_STEM_LEN ? s : word;
+    });
+    // Only add if stemming actually changes something
+    if (stemmed.join(' ') !== n) {
+      stemmedPhrases.push({ original: w, stems: stemmed });
+    }
+  }
+
   // Pre-normalized wordlist for fuzzy matching, bucketed by length (deduplicated)
   const fuzzyByLength = new Map<number, string[]>();
   const seenFuzzy = new Set<string>();
@@ -648,6 +664,11 @@ export function createFilter(options: ToxiBROptions = {}): ToxiBRFilter {
     if (/\bcam4\b/i.test(text)) {
       return makeResult('hard_block', 'cam4');
     }
+    // "morra" + pronome dirigido — checked pre-normalization because rr→r makes
+    // "morra" indistinguishable from "mora" (morar/residir) after normalization
+    if (/\bmorra\b/i.test(text) && /\b(?:voc[eê]|tu|vc|seu|sua)\b/i.test(text)) {
+      return makeResult('hard_block', 'morra');
+    }
 
     // Layer 0a: Block links/URLs
     if (blockLinks && LINK_REGEX.test(text)) {
@@ -702,6 +723,31 @@ export function createFilter(options: ToxiBROptions = {}): ToxiBRFilter {
     for (const { word, regex } of hardBlockedRegexes) {
       if (regex.test(normalized)) {
         return makeResult('hard_block', word);
+      }
+    }
+
+    // Layer 1s: Stemmed multi-word phrase matching — catches verb conjugation variants
+    // (e.g. "chora no banho" matches "chorar no banho" via stem "chor")
+    {
+      const msgWords = normalized.split(/\s+/);
+      const msgStems = msgWords.map((w) => {
+        const s = stem(w);
+        return s.length >= MIN_STEM_LEN ? s : w;
+      });
+      for (const { original, stems } of stemmedPhrases) {
+        if (stems.length > msgStems.length) continue;
+        for (let i = 0; i <= msgStems.length - stems.length; i++) {
+          let match = true;
+          for (let j = 0; j < stems.length; j++) {
+            if (msgStems[i + j] !== stems[j]) {
+              match = false;
+              break;
+            }
+          }
+          if (match) {
+            return makeResult('hard_block', original);
+          }
+        }
       }
     }
 
@@ -795,8 +841,9 @@ export function createFilter(options: ToxiBROptions = {}): ToxiBRFilter {
         let closestDirected = Infinity;
         let closestSelfExpr = Infinity;
 
-        // Find closest directed pattern
-        for (let radius = 1; radius <= 5; radius++) {
+        // Find closest directed pattern — radius scales with message length
+        const maxRadius = Math.max(5, Math.min(normalizedWords.length, 15));
+        for (let radius = 1; radius <= maxRadius; radius++) {
           const ws = Math.max(0, pos - radius);
           const we = Math.min(normalizedWords.length, pos + radius + 1);
           const w = normalizedWords.slice(ws, we).join(' ');
