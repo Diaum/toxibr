@@ -341,6 +341,7 @@ const FUZZY_ALLOWLIST = new Set([
   'transe', // → causing false positive in "Terra em Transe" (fuzzy match com "transar")
   'bicho', // → causing false positives in: "O Bicho vai Pegar", "Bicho de Sete Cabeças" (fuzzy match com "bichona")
   'lambs', // -> causing false positives in: "The Silence of the Lambs" (fuzzy match com "lamber")
+  'asasins', // → causing false positive in "Assassins Creed" (fuzzy match com "assassina")
 ]);
 
 // ─── PT-BR Stemmer (RSLP simplificado) ──────────────────────────────────────

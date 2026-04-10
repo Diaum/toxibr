@@ -92,6 +92,30 @@ describe('hard-blocked — racism terms', () => {
     expect(result.allowed).toBe(false);
     if (!result.allowed) expect(result.reason).toBe('hard_block');
   });
+
+  it('blocks "paquita do olodum"', () => {
+    const result = filterContent('você é uma paquita do olodum');
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) expect(result.reason).toBe('hard_block');
+  });
+
+  it('blocks "paquita do olodum" com leetspeak (p@quit@ d0 0l0dum)', () => {
+    const result = filterContent('p@quit@ d0 0l0dum');
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) expect(result.reason).toBe('hard_block');
+  });
+
+  it('blocks "paquita do olodum" com zero-width char dentro da palavra', () => {
+    const result = filterContent('paqu\u200Bita do olo\u200Bdum');
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) expect(result.reason).toBe('hard_block');
+  });
+
+  it('blocks "paquita do olodum" com acentos incomuns', () => {
+    const result = filterContent('pàquita dô ölodùm');
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) expect(result.reason).toBe('hard_block');
+  });
 });
 
 // ─── New slurs added in v2 ───────────────────────────────────────────────────
