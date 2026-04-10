@@ -2942,3 +2942,174 @@ describe('Falsos positivos em filmes - devem ser permitidos', () => {
     });
   });
 });
+
+// ─── Times da NFL — falsos positivos ─────────────────────────────────────────
+
+describe('times da NFL — nomes e apelidos não devem ser bloqueados', () => {
+  // AFC East
+  const timesAFCEast = [
+    'Buffalo Bills',
+    'Miami Dolphins',
+    'New England Patriots',
+    'New York Jets',
+  ];
+
+  // AFC North
+  const timesAFCNorth = [
+    'Baltimore Ravens',
+    'Cincinnati Bengals',
+    'Cleveland Browns',
+    'Pittsburgh Steelers',
+  ];
+
+  // AFC South
+  const timesAFCSouth = [
+    'Houston Texans',
+    'Indianapolis Colts',
+    'Jacksonville Jaguars',
+    'Tennessee Titans',
+  ];
+
+  // AFC West
+  const timesAFCWest = [
+    'Denver Broncos',
+    'Kansas City Chiefs',
+    'Las Vegas Raiders',
+    'Los Angeles Chargers',
+  ];
+
+  // NFC East
+  const timesNFCEast = [
+    'Dallas Cowboys',
+    'New York Giants',
+    'Philadelphia Eagles',
+    'Washington Commanders',
+  ];
+
+  // NFC North
+  const timesNFCNorth = [
+    'Chicago Bears',
+    'Detroit Lions',
+    'Green Bay Packers',
+    'Minnesota Vikings',
+  ];
+
+  // NFC South
+  const timesNFCSouth = [
+    'Atlanta Falcons',
+    'Carolina Panthers',
+    'New Orleans Saints',
+    'Tampa Bay Buccaneers',
+  ];
+
+  // NFC West
+  const timesNFCWest = [
+    'Arizona Cardinals',
+    'Los Angeles Rams',
+    'San Francisco 49ers',
+    'Seattle Seahawks',
+  ];
+
+  const todosTimes = [
+    ...timesAFCEast,
+    ...timesAFCNorth,
+    ...timesAFCSouth,
+    ...timesAFCWest,
+    ...timesNFCEast,
+    ...timesNFCNorth,
+    ...timesNFCSouth,
+    ...timesNFCWest,
+  ];
+
+  // Testa nome completo (City + Team)
+  todosTimes.forEach((time) => {
+    it(`allows "${time}"`, () => {
+      expect(filterContent(time).allowed).toBe(true);
+    });
+  });
+
+  // Testa apenas o nome do time (sem cidade)
+  const apenasTimes = [
+    'Bills', 'Dolphins', 'Patriots', 'Jets',
+    'Ravens', 'Bengals', 'Browns', 'Steelers',
+    'Texans', 'Colts', 'Jaguars', 'Titans',
+    'Broncos', 'Chiefs', 'Raiders', 'Chargers',
+    'Cowboys', 'Giants', 'Eagles', 'Commanders',
+    'Bears', 'Lions', 'Packers', 'Vikings',
+    'Falcons', 'Panthers', 'Saints', 'Buccaneers',
+    'Cardinals', 'Rams', '49ers', 'Seahawks',
+  ];
+
+  apenasTimes.forEach((time) => {
+    it(`allows "${time}" (nome do time)`, () => {
+      expect(filterContent(time).allowed).toBe(true);
+    });
+  });
+
+  // Nomes que podem colidir com termos bloqueados
+  it('allows "Bengals" (não confunde com bengala — slang bloqueada)', () => {
+    expect(filterContent('Cincinnati Bengals').allowed).toBe(true);
+    expect(filterContent('Bengals').allowed).toBe(true);
+    expect(filterContent('Vai Bengals!').allowed).toBe(true);
+  });
+
+  it('allows "Browns" (Cleveland Browns)', () => {
+    expect(filterContent('Cleveland Browns').allowed).toBe(true);
+    expect(filterContent('Browns').allowed).toBe(true);
+  });
+
+  it('allows "Titans" (Tennessee Titans)', () => {
+    expect(filterContent('Tennessee Titans').allowed).toBe(true);
+    expect(filterContent('Titans').allowed).toBe(true);
+  });
+
+  it('allows "Chiefs" (Kansas City Chiefs)', () => {
+    expect(filterContent('Kansas City Chiefs').allowed).toBe(true);
+    expect(filterContent('Chiefs').allowed).toBe(true);
+  });
+
+  it('allows "Saints" (New Orleans Saints)', () => {
+    expect(filterContent('New Orleans Saints').allowed).toBe(true);
+    expect(filterContent('Saints').allowed).toBe(true);
+  });
+
+  it('allows "Cowboys" (Dallas Cowboys)', () => {
+    expect(filterContent('Dallas Cowboys').allowed).toBe(true);
+    expect(filterContent('Cowboys').allowed).toBe(true);
+  });
+
+  it('allows "Rams" (Los Angeles Rams)', () => {
+    expect(filterContent('Los Angeles Rams').allowed).toBe(true);
+    expect(filterContent('Rams').allowed).toBe(true);
+  });
+
+  // Frases comuns de torcida
+  const frasesTorcida = [
+    'Vai Chiefs!',
+    'Vai Cowboys!',
+    'Vai Saints!',
+    'Chiefs vai ganhar o Super Bowl',
+    'Assistindo o jogo do Bengals hoje',
+    'Browns campeoes',
+    'Raider Nation',
+    'Bills Mafia',
+    'Niners na final',
+    'Go Packers!',
+    'Broncos e o melhor time da NFL',
+    'Hoje tem jogo da NFL',
+    'Super Bowl domingo',
+    'Patrick Mahomes e incrivel',
+    'NFL no Brasil',
+    'Jogo em Sao Paulo',
+    'Primeiro touchdown do jogo',
+    'Interceptacao dos Eagles',
+    'Defesa dos Ravens e incrivel',
+    'Steelers Nation',
+  ];
+
+  frasesTorcida.forEach((frase) => {
+    it(`allows frase de torcida: "${frase}"`, () => {
+      expect(filterContent(frase).allowed).toBe(true);
+    });
+  });
+});
