@@ -90,6 +90,7 @@ export const HARD_BLOCKED: string[] = [
   'quenga',
   'rapariga', 'rameira', 'meretriz',
   'vacilao',
+  'cu de ampola',
 
   // ── Abreviacoes BR comuns ──
   'ppk', 'pqp', 'gzr', 'bct', 'pnht',
