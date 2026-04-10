@@ -2999,12 +2999,7 @@ describe('Falsos positivos em filmes - devem ser permitidos', () => {
 
 describe('times da NFL — nomes e apelidos não devem ser bloqueados', () => {
   // AFC East
-  const timesAFCEast = [
-    'Buffalo Bills',
-    'Miami Dolphins',
-    'New England Patriots',
-    'New York Jets',
-  ];
+  const timesAFCEast = ['Buffalo Bills', 'Miami Dolphins', 'New England Patriots', 'New York Jets'];
 
   // AFC North
   const timesAFCNorth = [
@@ -3082,14 +3077,38 @@ describe('times da NFL — nomes e apelidos não devem ser bloqueados', () => {
 
   // Testa apenas o nome do time (sem cidade)
   const apenasTimes = [
-    'Bills', 'Dolphins', 'Patriots', 'Jets',
-    'Ravens', 'Bengals', 'Browns', 'Steelers',
-    'Texans', 'Colts', 'Jaguars', 'Titans',
-    'Broncos', 'Chiefs', 'Raiders', 'Chargers',
-    'Cowboys', 'Giants', 'Eagles', 'Commanders',
-    'Bears', 'Lions', 'Packers', 'Vikings',
-    'Falcons', 'Panthers', 'Saints', 'Buccaneers',
-    'Cardinals', 'Rams', '49ers', 'Seahawks',
+    'Bills',
+    'Dolphins',
+    'Patriots',
+    'Jets',
+    'Ravens',
+    'Bengals',
+    'Browns',
+    'Steelers',
+    'Texans',
+    'Colts',
+    'Jaguars',
+    'Titans',
+    'Broncos',
+    'Chiefs',
+    'Raiders',
+    'Chargers',
+    'Cowboys',
+    'Giants',
+    'Eagles',
+    'Commanders',
+    'Bears',
+    'Lions',
+    'Packers',
+    'Vikings',
+    'Falcons',
+    'Panthers',
+    'Saints',
+    'Buccaneers',
+    'Cardinals',
+    'Rams',
+    '49ers',
+    'Seahawks',
   ];
 
   apenasTimes.forEach((time) => {
