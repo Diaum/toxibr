@@ -1,0 +1,152 @@
+.why-context-section {
+  max-width: 1200px;
+  margin: 4rem auto;
+  padding: 0 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.why-context-title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.why-context-subtitle {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.why-context-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+@media (max-width: 768px) {
+  .why-context-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.why-context-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.why-context-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 0.75rem;
+}
+
+.why-context-header.bad {
+  color: var(--red);
+}
+
+.why-context-header.good {
+  color: var(--green);
+}
+
+.why-context-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1;
+}
+
+.why-context-card.bad {
+  border: 1px solid var(--red-border);
+}
+
+.why-context-card.good {
+  border: 1px solid var(--green-border);
+}
+
+.why-context-example {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.why-context-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.why-context-text {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.why-context-badge {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.why-context-badge.flagged {
+  background: var(--red-bg);
+  color: var(--red);
+  border: 1px solid var(--red-border);
+}
+
+.why-context-badge.allowed {
+  background: var(--green-bg);
+  color: var(--green);
+  border: 1px solid var(--green-border);
+}
+
+.why-context-reason {
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+.why-context-reason.bad {
+  color: var(--red);
+}
+
+.why-context-reason.good {
+  color: var(--green);
+}
+
+.why-context-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0.75rem 0;
+}
+
+.why-context-footer {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.why-context-footer.bad {
+  color: var(--red);
+}
+
+.why-context-footer.good {
+  color: var(--green);
+}

@@ -7,6 +7,7 @@ import Terminal from './components/Terminal';
 import Scanner from './components/Scanner';
 import Examples from './components/Examples';
 import Stats from './components/Stats';
+import WhyContext from './components/WhyContext';
 import HowToUse from './components/HowToUse';
 import Glossary from './components/Glossary';
 import SubmitWord from './components/SubmitWord';
@@ -99,6 +100,7 @@ function App() {
             </div>
           </section>
           <Examples onSelect={handleScan} />
+          <WhyContext />
           <Stats totalTerms={HARD_BLOCKED.length + CONTEXT_SENSITIVE.length} />
           <Glossary />
           <SubmitWord />
