@@ -1,6 +1,6 @@
 # ToxiBR - Moderação de Chat Open Source
 
-![ToxiBR Screenshot](https://raw.githubusercontent.com/igorf08/toxibr/main/assets/screenshot.png)
+![ToxiBR Screenshot](assets/screenshot.png)
 
 [![npm version](https://img.shields.io/npm/v/toxibr)](https://www.npmjs.com/package/toxibr)
 [![npm downloads](https://img.shields.io/npm/dm/toxibr)](https://www.npmjs.com/package/toxibr)
