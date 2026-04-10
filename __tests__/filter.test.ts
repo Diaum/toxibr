@@ -118,6 +118,34 @@ describe('hard-blocked — racism terms', () => {
   });
 });
 
+// ─── Slurs / ofensas graves — frases ─────────────────────────────────────────
+
+describe('hard-blocked — slur phrases', () => {
+  it('blocks "cu de ampola"', () => {
+    const result = filterContent('você é um cu de ampola');
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) expect(result.reason).toBe('hard_block');
+  });
+
+  it('blocks "cu de ampola" com leetspeak (cu d3 4mp0la)', () => {
+    const result = filterContent('cu d3 4mp0la');
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) expect(result.reason).toBe('hard_block');
+  });
+
+  it('blocks "cu de ampola" com zero-width char dentro da palavra', () => {
+    const result = filterContent('cu de am\u200Bpola');
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) expect(result.reason).toBe('hard_block');
+  });
+
+  it('blocks "cu de ampola" com acentos incomuns', () => {
+    const result = filterContent('cu dê àmpola');
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) expect(result.reason).toBe('hard_block');
+  });
+});
+
 // ─── New slurs added in v2 ───────────────────────────────────────────────────
 
 describe('hard-blocked — new slurs (v2)', () => {
