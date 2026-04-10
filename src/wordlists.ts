@@ -362,6 +362,7 @@ export const HARD_BLOCKED: string[] = [
   'bola gato',
   'mascote de petrolifera',
   'paquita do olodum',
+  '🌊🌵',
 
   // ── Nazismo / fascismo / supremacia ──
   'nazi', 'nazista', 'nazismo', 'neonazi', 'neonazista', 'neonazismo',
