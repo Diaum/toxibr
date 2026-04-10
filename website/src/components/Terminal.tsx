@@ -5,6 +5,7 @@ import './Terminal.css';
 
 interface TerminalProps {
   result: ScanResult | null;
+  version: string;
   onReportFP?: (word: string, matched: string, reason: string, context: string) => void;
   onReportMissed?: (word: string, context: string) => void;
 }
@@ -26,7 +27,7 @@ const reasonLabels: Record<string, string> = {
   offensive_emoji: 'OFFENSIVE_EMOJI',
 };
 
-export default function Terminal({ result, onReportFP, onReportMissed }: TerminalProps) {
+export default function Terminal({ result, version, onReportFP, onReportMissed }: TerminalProps) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   // Reset selection when result changes
@@ -148,7 +149,7 @@ export default function Terminal({ result, onReportFP, onReportMissed }: Termina
         {!result ? (
           <>
             <div className="term-line">
-              <span className="term-muted"># ToxiBR Engine v1.0.0</span>
+              <span className="term-muted"># ToxiBR Engine v{version}</span>
             </div>
             <div className="term-line">
               <span className="term-muted"># Aguardando mensagem para analise...</span>
@@ -177,7 +178,7 @@ export default function Terminal({ result, onReportFP, onReportMissed }: Termina
         ) : (
           <>
             <div className="term-line">
-              <span className="term-muted"># ToxiBR Engine v1.0.0</span>
+              <span className="term-muted"># ToxiBR Engine v{version}</span>
             </div>
             <div className="term-line">
               <span className="term-prompt">$</span>

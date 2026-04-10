@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { filterContent, normalize, HARD_BLOCKED, CONTEXT_SENSITIVE } from 'toxibr';
+import pkgJson from '../../package.json';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Terminal from './components/Terminal';
@@ -85,11 +86,12 @@ function App() {
 
       {page === 'home' ? (
         <>
-          <Hero onCopy={showToast} />
+          <Hero onCopy={showToast} version={pkgJson.version} />
           <section className="playground-section">
             <div className="playground-container">
               <Terminal
                 result={result}
+                version={pkgJson.version}
                 onReportFP={handleReportFP}
                 onReportMissed={handleReportMissed}
               />
@@ -97,7 +99,7 @@ function App() {
             </div>
           </section>
           <Examples onSelect={handleScan} />
-          <Stats hardBlocked={HARD_BLOCKED.length} contextSensitive={CONTEXT_SENSITIVE.length} />
+          <Stats totalTerms={HARD_BLOCKED.length + CONTEXT_SENSITIVE.length} />
           <Glossary />
           <SubmitWord />
         </>

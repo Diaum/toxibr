@@ -2,11 +2,10 @@ import { useState, useEffect } from 'react'
 import './Stats.css'
 
 interface StatsProps {
-  hardBlocked: number
-  contextSensitive: number
+  totalTerms: number
 }
 
-export default function Stats({ hardBlocked, contextSensitive }: StatsProps) {
+export default function Stats({ totalTerms }: StatsProps) {
   const [downloads, setDownloads] = useState<string>('—')
 
   useEffect(() => {
@@ -24,12 +23,8 @@ export default function Stats({ hardBlocked, contextSensitive }: StatsProps) {
     <section className="stats-section">
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-value accent">{hardBlocked}</div>
+          <div className="stat-value accent">{totalTerms}</div>
           <div className="stat-label">Termos bloqueados</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-value purple">{contextSensitive}</div>
-          <div className="stat-label">Context-sensitive</div>
         </div>
         <div className="stat-card">
           <div className="stat-value green">&lt; 1ms</div>

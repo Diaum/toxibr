@@ -2,9 +2,10 @@ import './Hero.css';
 
 interface HeroProps {
   onCopy: () => void;
+  version: string;
 }
 
-export default function Hero({ onCopy }: HeroProps) {
+export default function Hero({ onCopy, version }: HeroProps) {
   const copy = () => {
     navigator.clipboard.writeText('npm install toxibr');
     onCopy();
@@ -26,7 +27,7 @@ export default function Hero({ onCopy }: HeroProps) {
           >
             <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
           </svg>
-          v1.0
+          v{version}
         </span>
         <span className="hero-badge pink">
           <svg
