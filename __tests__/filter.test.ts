@@ -3200,7 +3200,9 @@ describe('issue #89 — harassment phrases with reordering/conjugation', () => {
     });
 
     it('blocks "a vergonha que seu pai sente de voce deve ser enorme, chora no banho"', () => {
-      const r = filterContent('a vergonha que seu pai sente de voce deve ser enorme, chora no banho');
+      const r = filterContent(
+        'a vergonha que seu pai sente de voce deve ser enorme, chora no banho'
+      );
       expect(r.allowed).toBe(false);
     });
   });

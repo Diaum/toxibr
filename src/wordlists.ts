@@ -643,7 +643,6 @@ export const PARTIAL_BLOCK_PATTERNS: RegExp[] = [
 
   // "queima/queimar/taca fogo + casa/familia" — ameaças de incêndio
   /\b(?:queim(?:a|ar|e|o)|ta[cç](?:a|ar|ou|o)\s+fogo|bot(?:a|ar|e|ou)\s+fogo)\b.{0,30}\b(?:casa|familia|predio)\b/,
-
 ];
 
 // Palavras que nunca devem ser bloqueadas.
