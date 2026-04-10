@@ -116,7 +116,23 @@ describe('hard-blocked — racism terms', () => {
     expect(result.allowed).toBe(false);
     if (!result.allowed) expect(result.reason).toBe('hard_block');
   });
+  
+  it('blocks "makako"', () => {
+    const result = filterContent('seu makako');
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) expect(result.reason).toBe('hard_block');
+  })
+
+  it('blocks "makaka"', () => {
+    const result = filterContent('sua makaka');
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) expect(result.reason).toBe('hard_block');
+  })
+
+
 });
+
+  
 
 // ─── Slurs / ofensas graves — frases ─────────────────────────────────────────
 
@@ -144,6 +160,20 @@ describe('hard-blocked — slur phrases', () => {
     expect(result.allowed).toBe(false);
     if (!result.allowed) expect(result.reason).toBe('hard_block');
   });
+
+  it('blocks "judeuzinho"', () => {
+    const result = filterContent('seu judeuzinho');
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) expect(result.reason).toBe('hard_block');
+  })
+  
+  it('blocks "veveco"', () => {
+    const result = filterContent('esse veveco');
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) expect(result.reason).toBe('hard_block');
+  })
+
+
 });
 
 // ─── New slurs added in v2 ───────────────────────────────────────────────────

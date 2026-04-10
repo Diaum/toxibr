@@ -91,6 +91,8 @@ export const HARD_BLOCKED: string[] = [
   'rapariga', 'rameira', 'meretriz',
   'vacilao',
   'cu de ampola',
+  'veveco', 
+  'judeuzinho',
 
   // ── Abreviacoes BR comuns ──
   'ppk', 'pqp', 'gzr', 'bct', 'pnht',
@@ -364,6 +366,8 @@ export const HARD_BLOCKED: string[] = [
   'mascote de petrolifera',
   'paquita do olodum',
   '🌊🌵',
+  'makako', 
+  'makaka',
 
   // ── Nazismo / fascismo / supremacia ──
   'nazi', 'nazista', 'nazismo', 'neonazi', 'neonazista', 'neonazismo',
