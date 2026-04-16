@@ -68,9 +68,7 @@ describe('normalize', () => {
     expect(normalize('você é m a c a c o')).toContain('macaco');
     expect(normalize('sua g o s t o s a')).toContain('gostosa');
   });
-
 });
-
 
 describe('letter-spaced hard blocks', () => {
   it('blocks spaced slurs after other words (regression: greedy spacing split the insult)', () => {
