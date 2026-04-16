@@ -61,6 +61,13 @@ O script `scripts/validate-wordlists.ts` verifica:
 
 O CI roda isso automaticamente em todo PR.
 
+## Setup do editor (VS Code / Cursor)
+
+Para manter a formatação consistente (Prettier/ESLint) e reduzir ruído no diff, instale as **extensões recomendadas do workspace**:
+
+- Ao abrir o projeto, aceite o prompt de **instalar as extensões recomendadas**.
+- Alternativamente, abra a aba de Extensões e procure por **Recomendadas** (workspace) ou use o comando **“Extensions: Show Recommended Extensions”**.
+
 ## Checklist do PR
 
 - [ ] Palavra em lowercase, sem acentos
