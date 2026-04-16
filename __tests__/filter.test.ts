@@ -63,6 +63,29 @@ describe('normalize', () => {
     // Script g + barred o
     expect(filterContent('ɡɵzar').allowed).toBe(false);
   });
+  it('normalizes letter-spaced obfuscation inside a phrase (not only when isolated)', () => {
+    expect(normalize('voce e m a c a c o')).toContain('macaco');
+    expect(normalize('você é m a c a c o')).toContain('macaco');
+    expect(normalize('sua g o s t o s a')).toContain('gostosa');
+  });
+
+});
+
+
+describe('letter-spaced hard blocks', () => {
+  it('blocks spaced slurs after other words (regression: greedy spacing split the insult)', () => {
+    expect(filterContent('voce e m a c a c o').allowed).toBe(false);
+    expect(filterContent('você é m a c a c o').allowed).toBe(false);
+    expect(filterContent('você é p u t a').allowed).toBe(false);
+    expect(filterContent('voce e i m b e c i l').allowed).toBe(false);
+    expect(filterContent('m a m a d o r').allowed).toBe(false);
+  });
+
+  it('blocks directed letter-spaced context insults', () => {
+    const r = filterContent('sua g o s t o s a');
+    expect(r.allowed).toBe(false);
+    if (!r.allowed) expect(r.reason).toBe('directed_insult');
+  });
 });
 
 // ─── Hard-blocked words ──────────────────────────────────────────────────────
