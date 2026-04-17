@@ -14,6 +14,7 @@ import {
   WHITELIST,
   PARTIAL_BLOCK_PATTERNS,
 } from './wordlists';
+
 import type {
   FilterResult,
   FilterStats,
@@ -22,6 +23,17 @@ import type {
   FilterReason,
   Severity,
 } from './types';
+
+/** Single-token terms that may appear as letter-by-letter obfuscation (e.g. "m a c a c o"). */
+const SPACED_LETTER_COLLAPSE_TARGETS: Set<string> = (() => {
+  const targets = new Set<string>();
+  for (const w of [...HARD_BLOCKED, ...CONTEXT_SENSITIVE, ...SEXUAL_SEED_WORDS]) {
+    if (/\s/.test(w)) continue;
+    if (!/^[a-z0-9ç]+$/i.test(w)) continue;
+    targets.add(w.toLowerCase());
+  }
+  return targets;
+})();
 
 // ─── Homoglyph map (Cyrillic + Latin Extended → ASCII) ───────────────────────
 
@@ -161,6 +173,63 @@ const LEET: Record<string, string> = {
   $: 's',
 };
 
+const MIN_SPACED_LETTER_TOKENS = 3;
+
+/**
+ * Collapses "letter-by-letter" obfuscation inside phrases.
+ *
+ * Example: token stream `["v", "o", "c", "e"]` may become `"voce"` (when `"voce"` is in
+ * the target set), without accidentally swallowing nearby letters.
+ */
+function collapseSpacedLetterRuns(text: string, letterTermTargets: Set<string>): string {
+  const tokens = text.split(/\s+/).filter((w) => w.length > 0);
+  const out: string[] = [];
+
+  let index = 0;
+  const isSingleLetterToken = (token: string) => token.length === 1 && /^[a-z]$/.test(token);
+
+  while (index < tokens.length) {
+    // If this token isn't a single letter, we can't start a spaced-letter match here.
+    if (!isSingleLetterToken(tokens[index])) {
+      out.push(tokens[index]);
+      index += 1;
+      continue;
+    }
+
+    // Greedily look for the longest run of single-letter tokens that forms a target term.
+    let matchedLength = 0;
+    let matchedTerm = '';
+
+    for (let end = tokens.length; end >= index + MIN_SPACED_LETTER_TOKENS; end--) {
+      let allSingleLetters = true;
+      for (let k = index; k < end; k++) {
+        if (!isSingleLetterToken(tokens[k])) {
+          allSingleLetters = false;
+          break;
+        }
+      }
+      if (!allSingleLetters) continue;
+
+      const candidate = tokens.slice(index, end).join('');
+      if (letterTermTargets.has(candidate)) {
+        matchedLength = end - index;
+        matchedTerm = candidate;
+        break;
+      }
+    }
+
+    if (matchedLength > 0) {
+      out.push(matchedTerm);
+      index += matchedLength;
+    } else {
+      out.push(tokens[index]);
+      index += 1;
+    }
+  }
+
+  return out.join(' ');
+}
+
 // ─── Normalize text for comparison ───────────────────────────────────────────
 
 export function normalize(input: string): string {
@@ -196,19 +265,8 @@ export function normalize(input: string): string {
   t = t.replace(/(\w)[.\-](?=\w[.\-])/g, '$1');
   t = t.replace(/(\w)[.\-](\w)/g, '$1$2');
 
-  // 9. Remove spaces between isolated single chars (p u t a → puta)
-
-  const blocklist = new Set([...HARD_BLOCKED]);
-
-  t = t.replace(/\b(?:[a-z]\s*){3,}\b/gi, (match) => {
-    const normalizada = match.replace(/\s+/g, '').toLowerCase();
-
-    if (blocklist.has(normalizada)) {
-      return normalizada;
-    }
-
-    return match;
-  });
+  // 9. Letter-by-letter obfuscation (p u t a → puta, voce e m a c a c o → voce e macaco)
+  t = collapseSpacedLetterRuns(t, SPACED_LETTER_COLLAPSE_TARGETS);
 
   // 10. Expand known abbreviations (strip punctuation from each word before lookup)
   const words = t.split(/\s+/);
