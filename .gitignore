@@ -6,7 +6,6 @@ dist
 .env.*
 *.log
 .DS_Store
-.vscode/
 .idea/
 coverage/
 
