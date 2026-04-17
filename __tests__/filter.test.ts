@@ -63,6 +63,27 @@ describe('normalize', () => {
     // Script g + barred o
     expect(filterContent('ɡɵzar').allowed).toBe(false);
   });
+  it('normalizes letter-spaced obfuscation inside a phrase (not only when isolated)', () => {
+    expect(normalize('voce e m a c a c o')).toContain('macaco');
+    expect(normalize('você é m a c a c o')).toContain('macaco');
+    expect(normalize('sua g o s t o s a')).toContain('gostosa');
+  });
+});
+
+describe('letter-spaced hard blocks', () => {
+  it('blocks spaced slurs after other words (regression: greedy spacing split the insult)', () => {
+    expect(filterContent('voce e m a c a c o').allowed).toBe(false);
+    expect(filterContent('você é m a c a c o').allowed).toBe(false);
+    expect(filterContent('você é p u t a').allowed).toBe(false);
+    expect(filterContent('voce e i m b e c i l').allowed).toBe(false);
+    expect(filterContent('m a m a d o r').allowed).toBe(false);
+  });
+
+  it('blocks directed letter-spaced context insults', () => {
+    const r = filterContent('sua g o s t o s a');
+    expect(r.allowed).toBe(false);
+    if (!r.allowed) expect(r.reason).toBe('directed_insult');
+  });
 });
 
 // ─── Hard-blocked words ──────────────────────────────────────────────────────
@@ -116,7 +137,23 @@ describe('hard-blocked — racism terms', () => {
     expect(result.allowed).toBe(false);
     if (!result.allowed) expect(result.reason).toBe('hard_block');
   });
+  
+  it('blocks "makako"', () => {
+    const result = filterContent('seu makako');
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) expect(result.reason).toBe('hard_block');
+  })
+
+  it('blocks "makaka"', () => {
+    const result = filterContent('sua makaka');
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) expect(result.reason).toBe('hard_block');
+  })
+
+
 });
+
+  
 
 // ─── Slurs / ofensas graves — frases ─────────────────────────────────────────
 
@@ -144,6 +181,20 @@ describe('hard-blocked — slur phrases', () => {
     expect(result.allowed).toBe(false);
     if (!result.allowed) expect(result.reason).toBe('hard_block');
   });
+
+  it('blocks "judeuzinho"', () => {
+    const result = filterContent('seu judeuzinho');
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) expect(result.reason).toBe('hard_block');
+  })
+  
+  it('blocks "veveco"', () => {
+    const result = filterContent('esse veveco');
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) expect(result.reason).toBe('hard_block');
+  })
+
+
 });
 
 // ─── New slurs added in v2 ───────────────────────────────────────────────────
